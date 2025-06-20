@@ -1,4 +1,4 @@
-package com.example.smartsplitclient
+package com.example.smartsplit
 
 import io.flutter.embedding.android.FlutterActivity
 
