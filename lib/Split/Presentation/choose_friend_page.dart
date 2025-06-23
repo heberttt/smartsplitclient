@@ -13,7 +13,7 @@ class ChooseFriendPage extends StatefulWidget {
 }
 
 class _ChooseFriendPageState extends State<ChooseFriendPage> {
-  List<Friend> _selectedFriends = [GuestFriend('You')];
+  final List<Friend> _selectedFriends = [GuestFriend('You')];
 
   Widget _getTransparentButton(IconData icon, VoidCallback callback) {
     return GestureDetector(

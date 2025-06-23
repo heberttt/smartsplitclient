@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:smartsplit/CustomWidget/friend_bar.dart';
 import 'package:smartsplit/CustomWidget/receipt_item_bar.dart';
+import 'package:smartsplit/CustomWidget/selectable_friend_bar.dart';
 import 'package:smartsplit/Split/Model/friend.dart';
 import 'package:smartsplit/Split/Model/friend_split.dart';
 import 'package:smartsplit/Split/Model/guest_friend.dart';
@@ -19,6 +19,23 @@ class _SplitPageState extends State<SplitPage> {
   final TextEditingController _titleController = TextEditingController(
     text: "Untitled Split",
   );
+
+  Friend? selectedFriend;
+
+  late List<ReceiptItemBar> receiptItemsMock;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedFriend =
+        widget.selectedFriends.isNotEmpty ? widget.selectedFriends.first : null;
+  }
+
+  void _changeSelectedFriend(Friend friend) {
+    setState(() {
+      selectedFriend = friend;
+    });
+  }
 
   Widget _getTransparentButton(IconData icon, VoidCallback callback) {
     return GestureDetector(
@@ -88,7 +105,11 @@ class _SplitPageState extends State<SplitPage> {
                         padding: const EdgeInsets.fromLTRB(8, 30, 0, 10),
                         child: Text("Friend"),
                       ),
-                      FriendBar(widget.selectedFriends),
+                      SelectableFriendBar(
+                        widget.selectedFriends,
+                        selectedFriend,
+                        _changeSelectedFriend,
+                      ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 30, 0, 10),
                         child: Row(
@@ -127,9 +148,27 @@ class _SplitPageState extends State<SplitPage> {
                         ),
                       ),
                       Column(
-                        children: [ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)])],
-                      )
-                    ],),
+                        children: () {
+                          List<FriendSplit> friendSplitsMock = [
+                            FriendSplit(widget.selectedFriends.first, 1),
+                            FriendSplit(widget.selectedFriends[1], 2),
+                          ];
+                          return receiptItemsMock = [
+                            ReceiptItemBar(
+                              ReceiptItem(
+                                itemName: "burger",
+                                quantity: 3,
+                                totalPrice: 20,
+                              ),
+                              friendSplitsMock,
+                              selectedFriend,
+                            ),
+                          ];
+                        }(),
+                        //[ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)])],
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ],

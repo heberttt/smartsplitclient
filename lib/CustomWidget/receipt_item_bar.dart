@@ -4,9 +4,11 @@ import 'package:smartsplit/Split/Model/friend_split.dart';
 import 'package:smartsplit/Split/Model/receipt_item.dart';
 
 class ReceiptItemBar extends StatefulWidget {
-  const ReceiptItemBar(this.item, this.splits, {super.key});
+  const ReceiptItemBar(this.item, this.splits, this.selectedFriend,{super.key});
 
   final ReceiptItem item;
+
+  final Friend? selectedFriend;
 
   final List<FriendSplit> splits;
 
@@ -19,6 +21,21 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
   int selectedAmount = 0;
 
   final double profilePaddingDistance = 17;
+
+ @override
+  void initState() {
+    super.initState();
+    
+  }
+
+  int _getAmountLeft(List<FriendSplit> splits, int totalItems){
+    int totalQuantityPicked = 0;
+    for (FriendSplit split in splits){
+      totalQuantityPicked += split.quantity;
+    }
+    return totalItems - totalQuantityPicked;
+  }
+
 
   Future<int?> _popUpValue(int maxValue, BuildContext context) async {
   final controller = TextEditingController();
@@ -88,6 +105,17 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
 
   @override
   Widget build(BuildContext context) {
+    for (FriendSplit friendSplit in widget.splits){
+      if (friendSplit.friend == widget.selectedFriend){
+        setState(() {
+          selectedAmount = friendSplit.quantity;
+        });
+        break;
+      }
+      if(friendSplit == widget.splits.last){
+        selectedAmount = 0;
+      }
+    }
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -123,7 +151,7 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Total Qty: ${widget.item.quantity}",
+                  "Items left: ${_getAmountLeft(widget.splits, widget.item.quantity)}",
                   style: TextStyle(fontSize: 10),
                 ),
                 Padding(
@@ -131,10 +159,17 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                   child: GestureDetector(
                     onTap: () async {
                       int? value = await _popUpValue(10, context);
-                      print( value!.toString() + " aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                      
+                      if (value != null){
+                        for (FriendSplit friendSplit in widget.splits){
+                          if (friendSplit.friend == widget.selectedFriend){
+                            selectedAmount = friendSplit.quantity;
+                          }
+                        }
+                      }
                     },
                     child: Text(
-                      "Selected Qty: x0",
+                      "Selected Qty: x$selectedAmount",
                       style: TextStyle(fontSize: 10),
                     ),
                   ),
@@ -149,7 +184,7 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                   _getAllProfile(),
                   Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: Text("Total Price: RM${widget.item.price}"),
+                    child: Text("Total Price: RM${widget.item.totalPrice}"),
                   ),
                 ],
               ),

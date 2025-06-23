@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:smartsplit/Split/Model/Friend.dart';
+import 'package:smartsplit/Split/Model/friend.dart';
 
 class RegisteredFriend extends Friend{
   String email;

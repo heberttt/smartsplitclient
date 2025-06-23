@@ -2,46 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:smartsplit/Split/Model/friend.dart';
 import 'package:smartsplit/Split/Model/guest_friend.dart';
 
-class FriendBar extends StatefulWidget {
-  const FriendBar(this.friends, {super.key});
+class SelectableFriendBar extends StatefulWidget {
+  const SelectableFriendBar(this.friends, this.selectedFriend, this.changeSelectedFriendCallback, {super.key});
+
+  final Friend? selectedFriend;
+
+  final Function(Friend) changeSelectedFriendCallback;
 
   final List<Friend> friends;
 
   @override
-  State<FriendBar> createState() => _FriendBarState();
+  State<SelectableFriendBar> createState() => _SelectableFriendBarState();
 }
 
-class _FriendBarState extends State<FriendBar> {
+class _SelectableFriendBarState extends State<SelectableFriendBar> {
   final Friend guest = GuestFriend("Hebert");
 
-  Widget constructProfile(Friend friend) {
+
+  Widget constructProfile(Friend friend, bool isSelected) {
     String displayName = () {
       String name = friend.getName();
       if (name.length > 10) return "${name.substring(0, 7)}...";
       return name;
     }();
 
+
     return Padding(
       padding: EdgeInsetsGeometry.fromSTEB(10, 0, 10, 0),
       child: Row(
         children: [
-          Column(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          GestureDetector(
+            onTap: () => widget.changeSelectedFriendCallback(friend),
+            child: Column(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    border: isSelected ? Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2
+                    ) : null
+                  ),
+                  child: friend.getProfilePicture(10),
                 ),
-                child: friend.getProfilePicture(10),
-              ),
-              Padding(
-                padding: EdgeInsetsGeometry.fromLTRB(0, 2, 0, 0),
-                child: Text(displayName, style: TextStyle(fontSize: 10)),
-              ),
-            ],
+                Padding(
+                  padding: EdgeInsetsGeometry.fromLTRB(0, 2, 0, 0),
+                  child: Text(displayName, style: TextStyle(fontSize: 10)),
+                ),
+              ],
+            ),
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,7 +81,7 @@ class _FriendBarState extends State<FriendBar> {
       List<Widget> profiles = [];
 
       for (Friend friend in widget.friends) {
-        profiles.add(constructProfile(friend));
+        profiles.add(constructProfile(friend, widget.selectedFriend == friend));
       }
 
       return profiles;
