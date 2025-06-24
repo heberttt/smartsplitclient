@@ -5,6 +5,7 @@ import 'package:smartsplit/Split/Model/friend.dart';
 import 'package:smartsplit/Split/Model/friend_split.dart';
 import 'package:smartsplit/Split/Model/receipt_item.dart';
 import 'package:smartsplit/Split/Presentation/manual_add_item_page.dart';
+import 'package:smartsplit/Split/Presentation/ocr_camera_page.dart';
 
 class SplitPage extends StatefulWidget {
   const SplitPage(this.selectedFriends, {super.key});
@@ -27,6 +28,18 @@ class _SplitPageState extends State<SplitPage> {
   List<ReceiptItem> receiptItems = [];
 
   List<ReceiptItemBar> _receiptItemBars = [];
+
+  Future<void> _addWithCamera() async {
+    final List<ReceiptItem>? result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => OcrCameraPage())
+    );
+
+    if (result != null && result.isNotEmpty){
+      for (ReceiptItem receiptItem in result){
+        _addReceiptItemBar(receiptItem);
+      }
+    }
+  }
 
   Future<void> _addNewItem() async {
     final result = await Navigator.of(context).push(
@@ -159,7 +172,7 @@ class _SplitPageState extends State<SplitPage> {
                             Row(
                               children: [
                                 GestureDetector(
-                                  onTap: () {},
+                                  onTap: _addWithCamera,
                                   child: SizedBox(
                                     width: 25,
                                     height: 25,
@@ -208,6 +221,36 @@ class _SplitPageState extends State<SplitPage> {
                         // }(),
                       ),
                     ],
+                  ),
+                  SizedBox(height: 70,)
+                ],
+              ),
+
+              Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 70,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        shape: RoundedRectangleBorder(),
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        'Split',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

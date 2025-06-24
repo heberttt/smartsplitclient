@@ -111,6 +111,7 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
       if (friendSplit.friend == widget.selectedFriend){
         setState(() {
           selectedAmount = friendSplit.quantity;
+          selected = selectedAmount > 0;
         });
         break;
       }
