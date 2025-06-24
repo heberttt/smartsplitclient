@@ -98,7 +98,9 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
   Widget _getAllProfile() {
     List<Widget> profiles = [];
     for (int i = 0; i < widget.splits.length; i++) {
-      profiles.add(_constructProfile(widget.splits[i].friend, i));
+      if (widget.splits[i].quantity > 0){
+        profiles.add(_constructProfile(widget.splits[i].friend, i));
+      }
     }
     return Stack(children: profiles);
   }
@@ -140,8 +142,18 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                   value: selected,
                   onChanged: (bool? value) {
                     setState(() {
+                      
+                        for (FriendSplit friendSplit in widget.splits){
+                          if (friendSplit.friend == widget.selectedFriend){
+                            if (selected){
+                              friendSplit.quantity = 0;
+                            }else{
+                              friendSplit.quantity = 1;
+                            }
+                          }
+                        }
+
                       selected = value!;
-                      //callback to make the quantity of selected person 0
                     });
                   },
                 ),
@@ -158,12 +170,17 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                   padding: const EdgeInsets.only(right: 12),
                   child: GestureDetector(
                     onTap: () async {
-                      int? value = await _popUpValue(10, context);
+                      int? value = await _popUpValue(_getAmountLeft(widget.splits, widget.item.quantity), context);
                       
                       if (value != null){
                         for (FriendSplit friendSplit in widget.splits){
                           if (friendSplit.friend == widget.selectedFriend){
-                            selectedAmount = friendSplit.quantity;
+                            setState(() {
+                              friendSplit.quantity = value;
+                              if (!selected || value > 0){
+                                selected = true;
+                              }
+                            });
                           }
                         }
                       }

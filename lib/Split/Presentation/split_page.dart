@@ -3,8 +3,8 @@ import 'package:smartsplit/CustomWidget/receipt_item_bar.dart';
 import 'package:smartsplit/CustomWidget/selectable_friend_bar.dart';
 import 'package:smartsplit/Split/Model/friend.dart';
 import 'package:smartsplit/Split/Model/friend_split.dart';
-import 'package:smartsplit/Split/Model/guest_friend.dart';
 import 'package:smartsplit/Split/Model/receipt_item.dart';
+import 'package:smartsplit/Split/Presentation/manual_add_item_page.dart';
 
 class SplitPage extends StatefulWidget {
   const SplitPage(this.selectedFriends, {super.key});
@@ -22,7 +22,46 @@ class _SplitPageState extends State<SplitPage> {
 
   Friend? selectedFriend;
 
-  late List<ReceiptItemBar> receiptItemsMock;
+  List<List<FriendSplit>> friendSplits = [];
+
+  List<ReceiptItem> receiptItems = [];
+
+  List<ReceiptItemBar> _receiptItemBars = [];
+
+  Future<void> _addNewItem() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => ManualAddItemPage()),
+    );
+
+    if (result != null){
+      _addReceiptItemBar(result);
+    }
+  }
+
+  void _addReceiptItemBar(ReceiptItem item) {
+    List<FriendSplit> friendSplit = [];
+    for (Friend f in widget.selectedFriends) {
+      friendSplit.add(FriendSplit(f, 0));
+    }
+
+    receiptItems.add(item);
+    friendSplits.add(friendSplit);
+    setState(() {
+      _receiptItemBars.add(ReceiptItemBar(item, friendSplit, selectedFriend));
+    });
+  }
+
+  void _constructReceiptItemBars() {
+    List<ReceiptItemBar> itemBars = [];
+    for (int i = 0; i < receiptItems.length; i++) {
+      itemBars.add(
+        ReceiptItemBar(receiptItems[i], friendSplits[i], selectedFriend),
+      );
+    }
+    setState(() {
+      _receiptItemBars = itemBars;
+    });
+  }
 
   @override
   void initState() {
@@ -54,6 +93,7 @@ class _SplitPageState extends State<SplitPage> {
 
   @override
   Widget build(BuildContext context) {
+    _constructReceiptItemBars();
     return SafeArea(
       child: GestureDetector(
         onTap: () {
@@ -134,7 +174,7 @@ class _SplitPageState extends State<SplitPage> {
                                     0,
                                   ),
                                   child: GestureDetector(
-                                    onTap: () {},
+                                    onTap: _addNewItem,
                                     child: SizedBox(
                                       width: 25,
                                       height: 25,
@@ -148,24 +188,24 @@ class _SplitPageState extends State<SplitPage> {
                         ),
                       ),
                       Column(
-                        children: () {
-                          List<FriendSplit> friendSplitsMock = [
-                            FriendSplit(widget.selectedFriends.first, 1),
-                            FriendSplit(widget.selectedFriends[1], 2),
-                          ];
-                          return receiptItemsMock = [
-                            ReceiptItemBar(
-                              ReceiptItem(
-                                itemName: "burger",
-                                quantity: 3,
-                                totalPrice: 20,
-                              ),
-                              friendSplitsMock,
-                              selectedFriend,
-                            ),
-                          ];
-                        }(),
-                        //[ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1),FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)]),ReceiptItemBar(ReceiptItem(itemName: "Instant noodle"), [FriendSplit(GuestFriend("ggg"), 1)])],
+                        children: _receiptItemBars,
+                        // children: () {
+                        //   List<FriendSplit> friendSplitsMock = [
+                        //     FriendSplit(widget.selectedFriends.first, 1),
+                        //     FriendSplit(widget.selectedFriends[1], 2),
+                        //   ];
+                        //   return receiptItemsMock = [
+                        //     ReceiptItemBar(
+                        //       ReceiptItem(
+                        //         itemName: "burger",
+                        //         quantity: 3,
+                        //         totalPrice: 20,
+                        //       ),
+                        //       friendSplitsMock,
+                        //       selectedFriend,
+                        //     ),
+                        //   ];
+                        // }(),
                       ),
                     ],
                   ),

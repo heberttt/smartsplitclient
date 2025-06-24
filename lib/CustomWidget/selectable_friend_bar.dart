@@ -56,19 +56,7 @@ class _SelectableFriendBarState extends State<SelectableFriendBar> {
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              GestureDetector(
-                onTap: (){
-                  setState(() {
-                    widget.friends.remove(friend);
-                  });
-                },
-                child: Icon(Icons.close, size: 10,),
-              )
-            ],
-          )
+          
         ],
       ),
     );
