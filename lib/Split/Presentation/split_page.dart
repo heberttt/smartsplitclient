@@ -3,6 +3,7 @@ import 'package:smartsplit/CustomWidget/receipt_item_bar.dart';
 import 'package:smartsplit/CustomWidget/selectable_friend_bar.dart';
 import 'package:smartsplit/Split/Model/friend.dart';
 import 'package:smartsplit/Split/Model/friend_split.dart';
+import 'package:smartsplit/Split/Model/receipt.dart';
 import 'package:smartsplit/Split/Model/receipt_item.dart';
 import 'package:smartsplit/Split/Presentation/manual_add_item_page.dart';
 import 'package:smartsplit/Split/Presentation/ocr_camera_page.dart';
@@ -21,11 +22,11 @@ class _SplitPageState extends State<SplitPage> {
     text: "Untitled Split",
   );
 
+  Receipt receipt = Receipt();
+
   Friend? selectedFriend;
 
   List<List<FriendSplit>> friendSplits = [];
-
-  List<ReceiptItem> receiptItems = [];
 
   List<ReceiptItemBar> _receiptItemBars = [];
 
@@ -57,7 +58,7 @@ class _SplitPageState extends State<SplitPage> {
       friendSplit.add(FriendSplit(f, 0));
     }
 
-    receiptItems.add(item);
+    receipt.receiptItems.add(item);
     friendSplits.add(friendSplit);
     setState(() {
       _receiptItemBars.add(ReceiptItemBar(item, friendSplit, selectedFriend));
@@ -66,9 +67,9 @@ class _SplitPageState extends State<SplitPage> {
 
   void _constructReceiptItemBars() {
     List<ReceiptItemBar> itemBars = [];
-    for (int i = 0; i < receiptItems.length; i++) {
+    for (int i = 0; i < receipt.receiptItems.length; i++) {
       itemBars.add(
-        ReceiptItemBar(receiptItems[i], friendSplits[i], selectedFriend),
+        ReceiptItemBar(receipt.receiptItems[i], friendSplits[i], selectedFriend),
       );
     }
     setState(() {

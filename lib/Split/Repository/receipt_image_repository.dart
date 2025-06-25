@@ -8,11 +8,24 @@ class ReceiptImageRepository {
     final mountainsRef = storageRef.child("${image.id}.jpg");
     try {
       await mountainsRef.putFile(image.imageFile);
+      
       return true;
     } catch (e) {
       print(e);
       return false;
     }
+  }
+
+  Future<String?> getImageDownloadURL(String imageId) async{
+    final storageRef = FirebaseStorage.instance.ref();
+    final mountainsRef = storageRef.child("$imageId.jpg");
+    try {
+      String downloadUrl = await mountainsRef.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print(e);
+      return null;
+    } 
   }
 
 }

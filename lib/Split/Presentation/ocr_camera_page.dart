@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:smartsplit/Split/Model/receipt.dart';
+import 'package:smartsplit/Split/Presentation/ocr_loading_screen.dart';
 
 class OcrCameraPage extends StatefulWidget {
   const OcrCameraPage({super.key});
@@ -43,6 +45,8 @@ class _OcrCameraPageState extends State<OcrCameraPage> {
 
       final image = await _controller.takePicture();
 
+      await _controller.pausePreview();
+
       // final directory = await getApplicationDocumentsDirectory();
       // final path = '${directory.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
       // await image.saveTo(path);
@@ -50,10 +54,6 @@ class _OcrCameraPageState extends State<OcrCameraPage> {
       setState(() {
         takenPhoto = File(image.path);
       });
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Photo saved to path')));
     } catch (e) {
       debugPrint('Error taking photo: $e');
     }
@@ -112,9 +112,12 @@ class _OcrCameraPageState extends State<OcrCameraPage> {
                               SizedBox(
                                 width: MediaQuery.sizeOf(context).width,
                                 height: 550,
-                                child: takenPhoto == null ? CameraPreview(_controller) :
-                                Center(child: Image.file(takenPhoto!))
-                                ,
+                                child:
+                                    takenPhoto == null
+                                        ? CameraPreview(_controller)
+                                        : Center(
+                                          child: Image.file(takenPhoto!),
+                                        ),
                               ),
                               Opacity(
                                 opacity: takenPhoto != null ? 0 : 1,
@@ -125,13 +128,15 @@ class _OcrCameraPageState extends State<OcrCameraPage> {
                                     Container(
                                       color: Color.fromRGBO(50, 50, 50, 0.5),
                                       width:
-                                          MediaQuery.sizeOf(context).width * 0.1,
+                                          MediaQuery.sizeOf(context).width *
+                                          0.1,
                                       height: 550,
                                     ),
                                     Container(
                                       color: Color.fromRGBO(50, 50, 50, 0.5),
                                       width:
-                                          MediaQuery.sizeOf(context).width * 0.1,
+                                          MediaQuery.sizeOf(context).width *
+                                          0.1,
                                       height: 550,
                                     ),
                                   ],
@@ -149,60 +154,68 @@ class _OcrCameraPageState extends State<OcrCameraPage> {
                           children: [
                             SizedBox(),
                             ElevatedButton(
-                              onPressed: takenPhoto != null ? (){
-                                setState(() {
-                                  takenPhoto = null;
-                                  _setupCamera();
-                                });
-                              } : null,
+                              onPressed:
+                                  takenPhoto != null
+                                      ? () async {
+                                        await _controller.resumePreview();
+                                        setState(() {
+                                          takenPhoto = null;
+                                        });
+                                        _setupCamera();
+                                      }
+                                      : null,
                               style: ElevatedButton.styleFrom(
                                 shape: const CircleBorder(),
-                                padding: const EdgeInsets.all(
-                                  15,
-                                ),
+                                padding: const EdgeInsets.all(15),
                                 elevation: 4,
                               ),
-                              child: const Icon(Icons.close, size: 20,),
+                              child: const Icon(Icons.close, size: 20),
                             ),
                             ElevatedButton(
-                              onPressed: takenPhoto == null ? _takePhoto : (){
-                                // upload to firebase and send ocr request
-                              },
+                              onPressed:
+                                  takenPhoto == null
+                                      ? _takePhoto
+                                      : () async {
+                                        final Receipt? result =
+                                            await Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        OcrLoadingScreen(takenPhoto!),
+                                              ),
+                                            );
+                                      },
                               style: ElevatedButton.styleFrom(
                                 shape: const CircleBorder(),
-                                padding: const EdgeInsets.all(
-                                  15,
-                                ),
+                                padding: const EdgeInsets.all(15),
                                 elevation: 4,
                               ),
-                              child: takenPhoto == null ? const Icon(Icons.camera_alt, size: 40,) : const Icon(Icons.check, size: 40,),
+                              child:
+                                  takenPhoto == null
+                                      ? const Icon(Icons.camera_alt, size: 40)
+                                      : const Icon(Icons.check, size: 40),
                             ),
                             ElevatedButton(
                               onPressed: () async {
                                 var pickedImage = await ImagePicker().pickImage(
                                   source: ImageSource.gallery,
-                                  imageQuality: 80, 
+                                  imageQuality: 80,
                                 );
 
-                                if (pickedImage != null){
-                                  
-                                setState(() {
-                                  takenPhoto = File(pickedImage.path);
-                                });
-
+                                if (pickedImage != null) {
+                                  setState(() {
+                                    takenPhoto = File(pickedImage.path);
+                                  });
                                 }
                               },
                               style: ElevatedButton.styleFrom(
                                 shape: const CircleBorder(),
-                                padding: const EdgeInsets.all(
-                                  15,
-                                ),
+                                padding: const EdgeInsets.all(15),
                                 elevation: 4,
                               ),
-                              child: const Icon(Icons.folder, size: 20,),
+                              child: const Icon(Icons.folder, size: 20),
                             ),
-                            SizedBox()
-                            
+                            SizedBox(),
                           ],
                         ),
                       ),

@@ -8,4 +8,9 @@ class ReceiptItem {
     this.totalPrice = 0,
     this.quantity = 1,
   });
+
+  @override
+String toString() {
+  return 'ReceiptItem(itemName: $itemName, totalPrice: $totalPrice, quantity: $quantity)';
+}
 }
