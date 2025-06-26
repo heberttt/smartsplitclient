@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:smartsplit/Split/Model/receipt.dart';
 import 'package:smartsplit/Split/Model/receipt_image.dart';
 import 'package:smartsplit/Split/Repository/receipt_image_repository.dart';

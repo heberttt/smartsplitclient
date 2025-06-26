@@ -7,6 +7,7 @@ class Receipt {
   List<FriendSplit> friendSplits;
   double additionalChargesPercent;
   double roundingAdjustment;
+  DateTime now = DateTime.now();
 
   Receipt({
     String? title,
