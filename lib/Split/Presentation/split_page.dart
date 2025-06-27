@@ -7,6 +7,7 @@ import 'package:smartsplit/Split/Model/receipt.dart';
 import 'package:smartsplit/Split/Model/receipt_item.dart';
 import 'package:smartsplit/Split/Presentation/manual_add_item_page.dart';
 import 'package:smartsplit/Split/Presentation/ocr_camera_page.dart';
+import 'package:smartsplit/Split/Presentation/split_result_page.dart';
 
 class SplitPage extends StatefulWidget {
   const SplitPage(this.selectedFriends, {super.key});
@@ -31,12 +32,15 @@ class _SplitPageState extends State<SplitPage> {
   List<ReceiptItemBar> _receiptItemBars = [];
 
   Future<void> _addWithCamera() async {
-    final List<ReceiptItem>? result = await Navigator.of(context).push(
+    final Receipt? result = await Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => OcrCameraPage())
     );
 
-    if (result != null && result.isNotEmpty){
-      for (ReceiptItem receiptItem in result){
+    if (result != null){
+      receipt.title = result.title;
+      receipt.additionalChargesPercent = result.additionalChargesPercent;
+      receipt.roundingAdjustment = result.roundingAdjustment;
+      for (ReceiptItem receiptItem in result.receiptItems){
         _addReceiptItemBar(receiptItem);
       }
     }
@@ -61,15 +65,24 @@ class _SplitPageState extends State<SplitPage> {
     receipt.receiptItems.add(item);
     friendSplits.add(friendSplit);
     setState(() {
-      _receiptItemBars.add(ReceiptItemBar(item, friendSplit, selectedFriend));
+      _receiptItemBars.add(ReceiptItemBar(item, friendSplit, selectedFriend, () => _removeReceiptItemBar(item)));
     });
+  }
+
+  void _removeReceiptItemBar(ReceiptItem item){
+    for (int i = 0; i < receipt.receiptItems.length; i++){
+      if (item == receipt.receiptItems[i]){
+        receipt.receiptItems.removeAt(i);
+        friendSplits.removeAt(i);
+      }
+    }
   }
 
   void _constructReceiptItemBars() {
     List<ReceiptItemBar> itemBars = [];
     for (int i = 0; i < receipt.receiptItems.length; i++) {
       itemBars.add(
-        ReceiptItemBar(receipt.receiptItems[i], friendSplits[i], selectedFriend),
+        ReceiptItemBar(receipt.receiptItems[i], friendSplits[i], selectedFriend, () => _removeReceiptItemBar(receipt.receiptItems[i])),
       );
     }
     setState(() {
@@ -203,23 +216,6 @@ class _SplitPageState extends State<SplitPage> {
                       ),
                       Column(
                         children: _receiptItemBars,
-                        // children: () {
-                        //   List<FriendSplit> friendSplitsMock = [
-                        //     FriendSplit(widget.selectedFriends.first, 1),
-                        //     FriendSplit(widget.selectedFriends[1], 2),
-                        //   ];
-                        //   return receiptItemsMock = [
-                        //     ReceiptItemBar(
-                        //       ReceiptItem(
-                        //         itemName: "burger",
-                        //         quantity: 3,
-                        //         totalPrice: 20,
-                        //       ),
-                        //       friendSplitsMock,
-                        //       selectedFriend,
-                        //     ),
-                        //   ];
-                        // }(),
                       ),
                     ],
                   ),
@@ -236,7 +232,17 @@ class _SplitPageState extends State<SplitPage> {
                     height: 70,
                     child: ElevatedButton(
                       onPressed: () {
-                        
+                        receipt.title = _titleController.text;
+                        receipt.friendSplits = friendSplits;
+
+                        Navigator.of(context).push(
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (_, _, _) => SplitResultPage(receipt),
+                            transitionDuration: Duration.zero,
+                            reverseTransitionDuration: Duration.zero,
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,

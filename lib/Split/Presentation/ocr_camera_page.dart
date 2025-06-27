@@ -184,6 +184,12 @@ class _OcrCameraPageState extends State<OcrCameraPage> {
                                                         OcrLoadingScreen(takenPhoto!),
                                               ),
                                             );
+
+                                        if (result != null){
+                                          Navigator.pop(context, result);
+                                        }else{
+                                          //handle if result null
+                                        }
                                       },
                               style: ElevatedButton.styleFrom(
                                 shape: const CircleBorder(),

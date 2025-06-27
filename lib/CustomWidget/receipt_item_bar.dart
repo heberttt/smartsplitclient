@@ -4,9 +4,11 @@ import 'package:smartsplit/Split/Model/friend_split.dart';
 import 'package:smartsplit/Split/Model/receipt_item.dart';
 
 class ReceiptItemBar extends StatefulWidget {
-  const ReceiptItemBar(this.item, this.splits, this.selectedFriend,{super.key});
+  const ReceiptItemBar(this.item, this.splits, this.selectedFriend, this.removeItemCallback, {super.key});
 
   final ReceiptItem item;
+
+  final VoidCallback removeItemCallback;
 
   final Friend? selectedFriend;
 
@@ -119,95 +121,109 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
         selectedAmount = 0;
       }
     }
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.surface,
-            width: 3,
+    return Dismissible(
+      key : ObjectKey(widget.item),
+      direction: DismissDirection.endToStart,
+      background: Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      color: Colors.red,
+      child: const Icon(Icons.delete, color: Colors.white),
+    ),
+    onDismissed: (direction){
+      widget.removeItemCallback();
+    },
+
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).colorScheme.surface,
+              width: 3,
+            ),
           ),
         ),
-      ),
-      width: MediaQuery.sizeOf(context).width,
-      height: 120,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(widget.item.itemName),
-                Checkbox(
-                  value: selected,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      
-                        for (FriendSplit friendSplit in widget.splits){
-                          if (friendSplit.friend == widget.selectedFriend){
-                            if (selected){
-                              friendSplit.quantity = 0;
-                            }else{
-                              friendSplit.quantity = 1;
-                            }
-                          }
-                        }
-
-                      selected = value!;
-                    });
-                  },
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Items left: ${_getAmountLeft(widget.splits, widget.item.quantity)}",
-                  style: TextStyle(fontSize: 10),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: GestureDetector(
-                    onTap: () async {
-                      int? value = await _popUpValue(_getAmountLeft(widget.splits, widget.item.quantity), context);
-                      
-                      if (value != null){
-                        for (FriendSplit friendSplit in widget.splits){
-                          if (friendSplit.friend == widget.selectedFriend){
-                            setState(() {
-                              friendSplit.quantity = value;
-                              if (!selected || value > 0){
-                                selected = true;
-                              }
-                            });
-                          }
-                        }
-                      }
-                    },
-                    child: Text(
-                      "Selected Qty: x$selectedAmount",
-                      style: TextStyle(fontSize: 10),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Row(
+        width: MediaQuery.sizeOf(context).width,
+        height: 120,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
+          child: Column(
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _getAllProfile(),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: Text("Total Price: RM${widget.item.totalPrice}"),
+                  Text(widget.item.itemName),
+                  Checkbox(
+                    value: selected,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        
+                          for (FriendSplit friendSplit in widget.splits){
+                            if (friendSplit.friend == widget.selectedFriend){
+                              if (selected){
+                                friendSplit.quantity = 0;
+                              }else{
+                                friendSplit.quantity = 1;
+                              }
+                            }
+                          }
+      
+                        selected = value!;
+                      });
+                    },
                   ),
                 ],
               ),
-            ),
-          ],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Items left: ${_getAmountLeft(widget.splits, widget.item.quantity)}",
+                    style: TextStyle(fontSize: 10),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: GestureDetector(
+                      onTap: () async {
+                        int? value = await _popUpValue(_getAmountLeft(widget.splits, widget.item.quantity), context);
+                        
+                        if (value != null){
+                          for (FriendSplit friendSplit in widget.splits){
+                            if (friendSplit.friend == widget.selectedFriend){
+                              setState(() {
+                                friendSplit.quantity = value;
+                                if (!selected || value > 0){
+                                  selected = true;
+                                }
+                              });
+                            }
+                          }
+                        }
+                      },
+                      child: Text(
+                        "Selected Qty: x$selectedAmount",
+                        style: TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _getAllProfile(),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Text("Total Price: RM${widget.item.totalPrice}"),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -33,7 +33,8 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
   }
 
   Future<String?> _getReceiptImageDownloadURL(String id) async {
-    final String? downloadUrl = await _receiptImageRepository.getImageDownloadURL(id);
+    final String? downloadUrl = await _receiptImageRepository
+        .getImageDownloadURL(id);
 
     return downloadUrl;
   }
@@ -61,7 +62,6 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
       widget.receiptImage,
     ); //await _uploadImage(widget.receiptImage);
 
-
     final String? downloadUrl = await _getReceiptImageDownloadURL(id);
 
     if (!isUploaded) {
@@ -70,7 +70,7 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
       return;
     }
 
-    if (downloadUrl == null){
+    if (downloadUrl == null) {
       print("downloadUrl missing");
       return;
     }
@@ -91,7 +91,11 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
       return;
     }
 
-    List<String> recTexts = List<String>.from(receiptData['rec_texts'].map((item) => item.toString()).toList());
+    List<String> recTexts = List<String>.from(
+      receiptData['rec_texts'].map((item) => item.toString()).toList(),
+    );
+
+    print("rec text :" + recTexts.toString());
 
     setState(() {
       _status = "Itemizing receipt...";
@@ -102,25 +106,32 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
       recTexts,
     );
 
+    print(transformedData.toString());
+
     if (transformedData == null) {
       int secondsLeft = 5;
+      Timer? countdownTimer;
 
-      for (int i = 5; i > 0 ; i++){
-        Timer(Duration(seconds: 1), (){
-          setState(() {
-            _status = "Something went wrong!, Please retry. Exiting in $secondsLeft...";
-          });
+      countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (!mounted) return;
+
+        setState(() {
+          _status =
+              "Something went wrong! Please retry. Exiting in $secondsLeft...";
         });
-      }
 
-      Navigator.pop(context);
+        secondsLeft--;
+
+        if (secondsLeft < 0) {
+          timer.cancel();
+          Navigator.pop(context);
+        }
+      });
     } else {
       setState(() {
         _status = "Completing...";
         _percent = 1;
       });
-
-      print(transformedData.toString());
 
       Navigator.pop(context, transformedData);
     }
@@ -133,7 +144,7 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
 
     return isUploaded;
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return SafeArea(
