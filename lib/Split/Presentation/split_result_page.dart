@@ -296,7 +296,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
                       ),
                         
                       ),
-                      Text((widget.receipt.roundingAdjustment > 0 ? "+" : "") + widget.receipt.roundingAdjustment.toStringAsFixed(2))
+                      Text((widget.receipt.roundingAdjustment > 0 ? "+" : "") + (widget.receipt.roundingAdjustment / 100).toString())
                     ],
                   ),
                 )

@@ -1,3 +1,4 @@
+import 'package:avatar_plus/avatar_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:smartsplit/Split/Model/friend.dart';
 
@@ -11,8 +12,11 @@ class GuestFriend implements Friend{
   }
 
   @override
-  Image getProfilePicture(double width) {
-    return Image(image: AssetImage("assets/user-profile.png"), width: width,);
+  Widget getProfilePicture(double width) {
+    return AvatarPlus(
+          name,
+          width: width,
+        );
   }
 
 }

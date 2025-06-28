@@ -31,27 +31,75 @@ class _SplitPageState extends State<SplitPage> {
 
   List<ReceiptItemBar> _receiptItemBars = [];
 
-  Future<void> _addWithCamera() async {
-    final Receipt? result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => OcrCameraPage())
+  Future<int?> _popUpExtraChargesValue(BuildContext context) async {
+    final controller = TextEditingController();
+    InputDecoration decoration = InputDecoration(
+      hintText: 'Enter tax %',
     );
 
-    if (result != null){
+    return await showDialog<int>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder:
+              (context, setState) => AlertDialog(
+                title: Text('Enter Tax'),
+                content: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  decoration: decoration,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      final input = int.tryParse(controller.text);
+                      if (input != null &&
+                          input >= 0) {
+                        Navigator.of(context).pop(input);
+                      } else {
+                        setState(() {
+                          controller.text = "";
+                          decoration = InputDecoration(
+                            hintText:
+                                "Tax must be more than 0%",
+                            hintStyle: TextStyle(
+                              color: Colors.red,
+                              fontSize: 10,
+                            ),
+                          );
+                        });
+                      }
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+        );
+      },
+    );
+  }
+
+  Future<void> _addWithCamera() async {
+    final Receipt? result = await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => OcrCameraPage()));
+
+    if (result != null) {
       receipt.title = result.title;
       receipt.additionalChargesPercent = result.additionalChargesPercent;
       receipt.roundingAdjustment = result.roundingAdjustment;
-      for (ReceiptItem receiptItem in result.receiptItems){
+      for (ReceiptItem receiptItem in result.receiptItems) {
         _addReceiptItemBar(receiptItem);
       }
     }
   }
 
   Future<void> _addNewItem() async {
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => ManualAddItemPage()),
-    );
+    final result = await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => ManualAddItemPage()));
 
-    if (result != null){
+    if (result != null) {
       _addReceiptItemBar(result);
     }
   }
@@ -65,13 +113,20 @@ class _SplitPageState extends State<SplitPage> {
     receipt.receiptItems.add(item);
     friendSplits.add(friendSplit);
     setState(() {
-      _receiptItemBars.add(ReceiptItemBar(item, friendSplit, selectedFriend, () => _removeReceiptItemBar(item)));
+      _receiptItemBars.add(
+        ReceiptItemBar(
+          item,
+          friendSplit,
+          selectedFriend,
+          () => _removeReceiptItemBar(item),
+        ),
+      );
     });
   }
 
-  void _removeReceiptItemBar(ReceiptItem item){
-    for (int i = 0; i < receipt.receiptItems.length; i++){
-      if (item == receipt.receiptItems[i]){
+  void _removeReceiptItemBar(ReceiptItem item) {
+    for (int i = 0; i < receipt.receiptItems.length; i++) {
+      if (item == receipt.receiptItems[i]) {
         receipt.receiptItems.removeAt(i);
         friendSplits.removeAt(i);
       }
@@ -82,7 +137,12 @@ class _SplitPageState extends State<SplitPage> {
     List<ReceiptItemBar> itemBars = [];
     for (int i = 0; i < receipt.receiptItems.length; i++) {
       itemBars.add(
-        ReceiptItemBar(receipt.receiptItems[i], friendSplits[i], selectedFriend, () => _removeReceiptItemBar(receipt.receiptItems[i])),
+        ReceiptItemBar(
+          receipt.receiptItems[i],
+          friendSplits[i],
+          selectedFriend,
+          () => _removeReceiptItemBar(receipt.receiptItems[i]),
+        ),
       );
     }
     setState(() {
@@ -214,12 +274,44 @@ class _SplitPageState extends State<SplitPage> {
                           ],
                         ),
                       ),
-                      Column(
-                        children: _receiptItemBars,
+                      Column(children: _receiptItemBars),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Theme.of(context).colorScheme.surface,
+                              width: 3,
+                            ),
+                          ),
+                        ),
+                        width: MediaQuery.sizeOf(context).width,
+                        height: 120,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("Tax & Extra Charges"),
+                                  GestureDetector(onTap: () async {
+                                    final int? percent = await _popUpExtraChargesValue(context);
+
+                                    if (percent != null){
+                                      receipt.additionalChargesPercent = percent;
+                                    }
+                                  },child: Text("${receipt.additionalChargesPercent}%"))
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 70,)
+                  SizedBox(height: 70),
                 ],
               ),
 
@@ -237,8 +329,7 @@ class _SplitPageState extends State<SplitPage> {
 
                         Navigator.of(context).push(
                           PageRouteBuilder(
-                            pageBuilder:
-                                (_, _, _) => SplitResultPage(receipt),
+                            pageBuilder: (_, _, _) => SplitResultPage(receipt),
                             transitionDuration: Duration.zero,
                             reverseTransitionDuration: Duration.zero,
                           ),

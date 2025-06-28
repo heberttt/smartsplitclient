@@ -13,7 +13,7 @@ class RegisteredFriend extends Friend{
   }
   
   @override
-  Image getProfilePicture(double width) {
+  Widget getProfilePicture(double width) {
     // TODO: implement getProfilePicture
     throw UnimplementedError();
   }
