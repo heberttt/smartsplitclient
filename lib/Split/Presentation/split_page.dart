@@ -86,6 +86,7 @@ class _SplitPageState extends State<SplitPage> {
 
     if (result != null) {
       receipt.title = result.title;
+      _titleController.text = receipt.title;
       receipt.additionalChargesPercent = result.additionalChargesPercent;
       receipt.roundingAdjustment = result.roundingAdjustment;
       for (ReceiptItem receiptItem in result.receiptItems) {

@@ -203,9 +203,13 @@ class _OcrCameraPageState extends State<OcrCameraPage> {
                             ),
                             ElevatedButton(
                               onPressed: () async {
+                                await _controller.pausePreview();
+
                                 var pickedImage = await ImagePicker().pickImage(
                                   source: ImageSource.gallery,
                                   imageQuality: 80,
+                                  maxWidth: 2000,
+                                  maxHeight: 2000
                                 );
 
                                 if (pickedImage != null) {

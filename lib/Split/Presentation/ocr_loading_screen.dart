@@ -66,11 +66,47 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
 
     if (!isUploaded) {
       // handle this error
+      int secondsLeft = 5;
+      Timer? countdownTimer;
+
+      countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (!mounted) return;
+
+        setState(() {
+          _status =
+              "Something went wrong! Please retry. Exiting in $secondsLeft...";
+        });
+
+        secondsLeft--;
+
+        if (secondsLeft < 0) {
+          timer.cancel();
+          Navigator.pop(context);
+        }
+      });
       print("upload fail");
       return;
     }
 
     if (downloadUrl == null) {
+      int secondsLeft = 5;
+      Timer? countdownTimer;
+
+      countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (!mounted) return;
+
+        setState(() {
+          _status =
+              "Something went wrong! Please retry. Exiting in $secondsLeft...";
+        });
+
+        secondsLeft--;
+
+        if (secondsLeft < 0) {
+          timer.cancel();
+          Navigator.pop(context);
+        }
+      });
       print("downloadUrl missing");
       return;
     }
@@ -87,7 +123,25 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
     );
 
     if (receiptData == null) {
-      print("ocr fail");
+      int secondsLeft = 5;
+      Timer? countdownTimer;
+
+      countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (!mounted) return;
+
+        setState(() {
+          _status =
+              "Something went wrong! Please retry. Exiting in $secondsLeft...";
+        });
+
+        secondsLeft--;
+
+        if (secondsLeft < 0) {
+          timer.cancel();
+          Navigator.pop(context);
+        }
+      });
+      print("OCR fail");
       return;
     }
 
@@ -144,7 +198,7 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
 
     return isUploaded;
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
