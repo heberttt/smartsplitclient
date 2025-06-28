@@ -26,10 +26,10 @@ class DataTransformService {
       List<ReceiptItem> receiptItems = [];
 
       for (int i = 0; i < receiptData['items'].length; i++){
-        receiptItems.add(ReceiptItem(itemName: receiptData['items'][i], totalPrice: receiptData['prices'][i] * receiptData['quantity'][i], quantity: receiptData['quantity'][i]));
+        receiptItems.add(ReceiptItem(itemName: receiptData['items'][i], totalPrice: ((receiptData['prices'][i] * 100).floor() * receiptData['quantity'][i]), quantity: receiptData['quantity'][i]));
       }
 
-      Receipt receipt = Receipt(title: receiptData['title'], receiptItems: receiptItems, additionalChargesPercent: receiptData['additionalChargesPercent'], roundingAdjustment: receiptData['roundingAdjustment']);
+      Receipt receipt = Receipt(title: receiptData['title'], receiptItems: receiptItems, additionalChargesPercent: receiptData['additionalChargesPercent'] , roundingAdjustment: (receiptData['roundingAdjustment'] * 100).floor());
       
       return receipt;
     }else{

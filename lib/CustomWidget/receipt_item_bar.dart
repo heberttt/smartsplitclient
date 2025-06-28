@@ -217,7 +217,7 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                     _getAllProfile(),
                     Padding(
                       padding: const EdgeInsets.only(right: 12),
-                      child: Text("Total Price: RM${widget.item.totalPrice}"),
+                      child: Text("Total Price: RM${widget.item.totalPrice / 100}"),
                     ),
                   ],
                 ),

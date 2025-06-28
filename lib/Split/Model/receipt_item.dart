@@ -1,6 +1,6 @@
 class ReceiptItem {
   String itemName;
-  double totalPrice;
+  int totalPrice;
   int quantity;
 
   ReceiptItem({

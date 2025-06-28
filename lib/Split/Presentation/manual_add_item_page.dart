@@ -135,7 +135,7 @@ class _ManualAddItemPageState extends State<ManualAddItemPage> {
                         context,
                         ReceiptItem(
                           itemName: name,
-                          totalPrice: price,
+                          totalPrice: ((price * 100).floor()).toInt(),
                           quantity: quantity,
                         ),
                       );

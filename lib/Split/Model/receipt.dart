@@ -5,8 +5,8 @@ class Receipt {
   String title = "Untitled Split";
   List<ReceiptItem> receiptItems;
   List<List<FriendSplit>> friendSplits;
-  double additionalChargesPercent;
-  double roundingAdjustment;
+  int additionalChargesPercent;
+  int roundingAdjustment;
   DateTime now = DateTime.now();
 
   Receipt({

@@ -17,7 +17,7 @@ class SplitResultPage extends StatefulWidget {
 class _SplitResultPageState extends State<SplitResultPage> {
   Map<Friend, List<Map<ReceiptItem, int>>> splits = {};
   List<Friend> splitKeys = [];
-  double overallTotal = 0;
+  int overallTotal = 0;
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
   }
 
   Widget _constructSplit(Friend f) {
-    double total = 0;
+    int total = 0;
 
     List<Map<ReceiptItem, int>> receiptItemMapList = splits[f]!;
     List<Map<String, String>> purchasedItemsDataMap = [];
@@ -50,18 +50,22 @@ class _SplitResultPageState extends State<SplitResultPage> {
           'itemName': receiptItemMapKey.itemName,
           'quantity': receiptItemMap[receiptItemMapKey].toString(),
           'totalPrice':
-              ((receiptItemMapKey.totalPrice / receiptItemMapKey.quantity) * receiptItemMap[receiptItemMapKey]!)
+              ((receiptItemMapKey.totalPrice / receiptItemMapKey.quantity) * receiptItemMap[receiptItemMapKey]! / 100)
                   .toString(),
         });
         }
         total +=
-            receiptItemMap[receiptItemMapKey]!.toDouble() *
+            (receiptItemMap[receiptItemMapKey]! *
             receiptItemMapKey.totalPrice /
-            receiptItemMapKey.quantity;
+            receiptItemMapKey.quantity).floor();
       }
     }
 
-    total = total + (total * widget.receipt.additionalChargesPercent / 100);
+    int tax = total;
+
+    total = total + (total * widget.receipt.additionalChargesPercent / 100).floor();
+
+    tax = total - tax;
 
     overallTotal += total;
 
@@ -103,7 +107,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text("${f.getName()}'s total"),
-                          Text("RM ${total.toStringAsFixed(2)}", style: TextStyle(
+                          Text("RM ${(total / 100)}", style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20
                           ),),
@@ -135,7 +139,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
                     Expanded(
                       flex: 1,
                       child: Text(
-                        "RM${itemMap["totalPrice"]!}",
+                        "RM${(itemMap["totalPrice"]!)}",
                         textAlign: TextAlign.right,
                       ),
                     ),
@@ -160,7 +164,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
                     Expanded(
                       flex: 1,
                       child: Text(
-                        "RM${(total * widget.receipt.additionalChargesPercent / 100).toStringAsFixed(2)}",
+                        "RM${tax / 100}",
                         textAlign: TextAlign.right,
                       ),
                     ),
@@ -276,7 +280,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
                         ),
                         
                       ),
-                      Text("RM ${(overallTotal + widget.receipt.roundingAdjustment).toStringAsFixed(2)}")
+                      Text("RM ${(overallTotal + widget.receipt.roundingAdjustment) / 100}")
                     ],
                   ),
                 ),
