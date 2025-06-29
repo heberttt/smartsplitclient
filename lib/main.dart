@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:smartsplit/Authentication/Presentation/login_page.dart';
 import 'package:smartsplit/Split/Model/receipt.dart';
-import 'package:smartsplit/Split/Model/receipt_image.dart';
 import 'package:smartsplit/Split/Presentation/choose_friend_page.dart';
 import 'package:smartsplit/Split/Presentation/ocr_loading_screen.dart';
 import 'package:smartsplit/Split/Presentation/split_result_page.dart';
@@ -63,6 +63,13 @@ class ExperimentRoom extends StatelessWidget {
                 );
               }, child: Text(
                 "split page result"
+              ),),
+              ElevatedButton(onPressed: (){
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                );
+              }, child: Text(
+                "login page"
               ),),
             ],
           ),

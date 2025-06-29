@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "679716986260",
+    "project_id": "smartsplit-87a0b",
+    "storage_bucket": "smartsplit-87a0b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:679716986260:android:b26379755fe90026f00381",
+        "android_client_info": {
+          "package_name": "com.example.smartsplit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "679716986260-p9lo3jnk7q5qvgn3mohrpj9csare4gl2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartsplit",
+            "certificate_hash": "2416610d0821df0ccd7970334e05de47ec8478b9"
+          }
+        },
+        {
+          "client_id": "679716986260-qblmkehbe06n7sj6tej7h668lavshfbr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz62j4nMWgEI1s8vsbzj4GDnK3suklJ44"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "679716986260-qblmkehbe06n7sj6tej7h668lavshfbr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "679716986260-aqq9bbrr41s5a7r8vohhfjdue2cq8lts.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartsplitclient"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:679716986260:android:6c21db4fe650ea2ff00381",
+        "android_client_info": {
+          "package_name": "com.example.smartsplitclient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "679716986260-j7ep8u682va66uvrsvbdfap60us8ihqn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartsplitclient",
+            "certificate_hash": "2416610d0821df0ccd7970334e05de47ec8478b9"
+          }
+        },
+        {
+          "client_id": "679716986260-qblmkehbe06n7sj6tej7h668lavshfbr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz62j4nMWgEI1s8vsbzj4GDnK3suklJ44"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "679716986260-qblmkehbe06n7sj6tej7h668lavshfbr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "679716986260-aqq9bbrr41s5a7r8vohhfjdue2cq8lts.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartsplitclient"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
