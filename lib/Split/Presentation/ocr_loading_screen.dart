@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:smartsplit/Split/Model/receipt.dart';
-import 'package:smartsplit/Split/Model/receipt_image.dart';
-import 'package:smartsplit/Split/Repository/receipt_image_repository.dart';
-import 'package:smartsplit/Split/Service/data_transform_service.dart';
-import 'package:smartsplit/Split/Service/ocr_service.dart';
+import 'package:smartsplitclient/Split/Model/receipt.dart';
+import 'package:smartsplitclient/Split/Model/receipt_image.dart';
+import 'package:smartsplitclient/Split/Repository/receipt_image_repository.dart';
+import 'package:smartsplitclient/Split/Service/data_transform_service.dart';
+import 'package:smartsplitclient/Split/Service/ocr_service.dart';
 
 class OcrLoadingScreen extends StatefulWidget {
   const OcrLoadingScreen(this.receiptImage, {super.key});

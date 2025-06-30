@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
-import 'package:smartsplit/Split/Model/receipt_item.dart';
+import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 
 class ManualAddItemPage extends StatefulWidget {
   const ManualAddItemPage({super.key});

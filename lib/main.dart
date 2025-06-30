@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:smartsplit/Authentication/Presentation/login_page.dart';
-import 'package:smartsplit/Split/Model/receipt.dart';
-import 'package:smartsplit/Split/Presentation/choose_friend_page.dart';
-import 'package:smartsplit/Split/Presentation/ocr_loading_screen.dart';
-import 'package:smartsplit/Split/Presentation/split_result_page.dart';
-import 'package:smartsplit/Theme/light_theme.dart';
+import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
+import 'package:smartsplitclient/Split/Model/receipt.dart';
+import 'package:smartsplitclient/Split/Presentation/choose_friend_page.dart';
+import 'package:smartsplitclient/Split/Presentation/ocr_loading_screen.dart';
+import 'package:smartsplitclient/Split/Presentation/split_result_page.dart';
+import 'package:smartsplitclient/Theme/light_theme.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {

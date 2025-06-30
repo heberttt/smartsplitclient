@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:smartsplit/Split/Model/friend.dart';
-import 'package:smartsplit/Split/Model/guest_friend.dart';
+import 'package:smartsplitclient/Split/Model/friend.dart';
+import 'package:smartsplitclient/Split/Model/guest_friend.dart';
 
 class SelectableFriendBar extends StatefulWidget {
   const SelectableFriendBar(this.friends, this.selectedFriend, this.changeSelectedFriendCallback, {super.key});

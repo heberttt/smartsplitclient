@@ -1,4 +1,4 @@
-import 'package:smartsplit/Split/Model/friend.dart';
+import 'package:smartsplitclient/Split/Model/friend.dart';
 
 class FriendSplit {
   Friend friend;

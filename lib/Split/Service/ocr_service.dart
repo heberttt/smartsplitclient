@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:smartsplit/Constants/backend_url.dart';
+import 'package:smartsplitclient/Constants/backend_url.dart';
 
 class OcrService {
    Future<Map<String, dynamic>?> extractData(String address) async {

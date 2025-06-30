@@ -1,5 +1,5 @@
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:smartsplit/Split/Model/receipt_image.dart';
+import 'package:smartsplitclient/Split/Model/receipt_image.dart';
 
 class ReceiptImageRepository {
 

@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:smartsplit/Authentication/Presentation/sign_up_page.dart';
+import 'package:smartsplitclient/Authentication/Presentation/sign_up_page.dart';
+import 'dart:developer';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,6 +22,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
 
       if (googleUser == null) {
         // User canceled the sign-in
@@ -53,6 +55,11 @@ class _LoginPageState extends State<LoginPage> {
         context,
         "Signed in successful. ${userCredential.user?.email}",
       );
+
+      final String? result = await FirebaseAuth.instance.currentUser?.getIdToken(true);
+
+      final RegExp pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
+  pattern.allMatches(result!).forEach((RegExpMatch match) =>   print(match.group(0)));
     } else {
       showWarningDialog(context, "Sign in failed.");
     }
@@ -86,6 +93,14 @@ class _LoginPageState extends State<LoginPage> {
 
       if (user != null && user.emailVerified) {
         showSuccessDialog(context, "Login successful");
+
+        final String? result = await FirebaseAuth.instance.currentUser?.getIdToken(true);
+
+        
+
+        final RegExp pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
+  pattern.allMatches(result!).forEach((RegExpMatch match) =>   print(match.group(0)));
+
 
         //add navigator to homepage
       }

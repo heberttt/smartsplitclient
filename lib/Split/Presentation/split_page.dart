@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:smartsplit/CustomWidget/receipt_item_bar.dart';
-import 'package:smartsplit/CustomWidget/selectable_friend_bar.dart';
-import 'package:smartsplit/Split/Model/friend.dart';
-import 'package:smartsplit/Split/Model/friend_split.dart';
-import 'package:smartsplit/Split/Model/receipt.dart';
-import 'package:smartsplit/Split/Model/receipt_item.dart';
-import 'package:smartsplit/Split/Presentation/manual_add_item_page.dart';
-import 'package:smartsplit/Split/Presentation/ocr_camera_page.dart';
-import 'package:smartsplit/Split/Presentation/split_result_page.dart';
+import 'package:smartsplitclient/CustomWidget/receipt_item_bar.dart';
+import 'package:smartsplitclient/CustomWidget/selectable_friend_bar.dart';
+import 'package:smartsplitclient/Split/Model/friend.dart';
+import 'package:smartsplitclient/Split/Model/friend_split.dart';
+import 'package:smartsplitclient/Split/Model/receipt.dart';
+import 'package:smartsplitclient/Split/Model/receipt_item.dart';
+import 'package:smartsplitclient/Split/Presentation/manual_add_item_page.dart';
+import 'package:smartsplitclient/Split/Presentation/ocr_camera_page.dart';
+import 'package:smartsplitclient/Split/Presentation/split_result_page.dart';
 
 class SplitPage extends StatefulWidget {
   const SplitPage(this.selectedFriends, {super.key});

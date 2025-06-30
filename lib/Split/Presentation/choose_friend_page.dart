@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:smartsplit/CustomWidget/friend_bar.dart';
-import 'package:smartsplit/Split/Model/friend.dart';
-import 'package:smartsplit/Split/Model/guest_friend.dart';
-import 'package:smartsplit/Split/Presentation/split_page.dart';
+import 'package:smartsplitclient/CustomWidget/friend_bar.dart';
+import 'package:smartsplitclient/Split/Model/friend.dart';
+import 'package:smartsplitclient/Split/Model/guest_friend.dart';
+import 'package:smartsplitclient/Split/Presentation/split_page.dart';
 
 class ChooseFriendPage extends StatefulWidget {
   const ChooseFriendPage({super.key});

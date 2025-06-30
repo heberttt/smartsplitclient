@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:smartsplit/Constants/backend_url.dart';
-import 'package:smartsplit/Split/Model/receipt.dart';
+import 'package:smartsplitclient/Constants/backend_url.dart';
+import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:http/http.dart' as http;
-import 'package:smartsplit/Split/Model/receipt_item.dart';
+import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 
 class DataTransformService {
   Future<Receipt?> transformData(List<String> recTexts) async {

@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:smartsplit/Split/Model/receipt.dart';
-import 'package:smartsplit/Split/Presentation/ocr_loading_screen.dart';
+import 'package:smartsplitclient/Split/Model/receipt.dart';
+import 'package:smartsplitclient/Split/Presentation/ocr_loading_screen.dart';
 
 class OcrCameraPage extends StatefulWidget {
   const OcrCameraPage({super.key});
