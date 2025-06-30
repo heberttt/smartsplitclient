@@ -85,6 +85,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (user != null && !user.emailVerified) {
         await FirebaseAuth.instance.signOut();
+        await GoogleSignIn().signOut();
         showWarningDialog(
           context,
           'Email not verified. Please check your inbox.',

@@ -1,5 +1,5 @@
-import 'package:smartsplit/Split/Model/receipt.dart';
-import 'package:smartsplit/Split/Model/receipt_item.dart';
+import 'package:smartsplitclient/Split/Model/receipt.dart';
+import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 import 'package:test/test.dart';
 
 void main() {
