@@ -1,8 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
+import 'package:smartsplitclient/Authentication/Converter/account_converter.dart';
 import 'package:smartsplitclient/Authentication/Presentation/sign_up_page.dart';
-import 'dart:developer';
+
+
+import 'package:smartsplitclient/Authentication/Service/account_service.dart';
+import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Home/Presentation/homepage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,32 +22,30 @@ class _LoginPageState extends State<LoginPage> {
 
   final TextEditingController _passwordController = TextEditingController();
 
+  final AccountService accountService = AccountService();
+  final AccountConverter accountConverter = AccountConverter();
+
   String _loginButtonText = "Login";
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-
       if (googleUser == null) {
-        // User canceled the sign-in
         return null;
       }
 
-      // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
 
-      // Create a new credential
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // Sign in to Firebase with the Google credential
       return await FirebaseAuth.instance.signInWithCredential(credential);
     } catch (e) {
+      showWarningDialog("Google Sign-In failed");
       print('Google Sign-In failed: $e');
       return null;
     }
@@ -51,23 +55,50 @@ class _LoginPageState extends State<LoginPage> {
     UserCredential? userCredential = await signInWithGoogle();
 
     if (userCredential != null) {
-      showSuccessDialog(
-        context,
-        "Signed in successful. ${userCredential.user?.email}",
-      );
 
-      final String? result = await FirebaseAuth.instance.currentUser?.getIdToken(true);
+        final response = await accountService.login();
 
-      final RegExp pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
-  pattern.allMatches(result!).forEach((RegExpMatch match) =>   print(match.group(0)));
+        if (response == null) {
+          showWarningDialog("Server is unavailable. Please try again later...");
+          context.read<AuthState>().logout();
+          return;
+        } else if (response.statusCode == 200 || response.statusCode == 201) {
+          //welcome back & newcomers
+          context.read<AuthState>().currentUser = accountConverter.convertFromResponse(response);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        } else if (response.statusCode == 401) {
+          showWarningDialog("Unauthorized");
+
+          context.read<AuthState>().logout();
+          return;
+        } else {
+          showWarningDialog("Server Error. Status code: ${response.statusCode}");
+
+          context.read<AuthState>().logout();
+          return;
+        }
+      // showSuccessDialog("Signed in successful. ${userCredential.user?.email}");
+
+      // final String? result = await FirebaseAuth.instance.currentUser
+      //     ?.getIdToken(true);
+
+      // final RegExp pattern = RegExp(
+      //   '.{1,800}',
+      // ); // 800 is the size of each chunk
+      // pattern
+      //     .allMatches(result!)
+      //     .forEach((RegExpMatch match) => print(match.group(0)));
     } else {
-      showWarningDialog(context, "Sign in failed.");
+      showWarningDialog("Sign in failed.");
     }
   }
 
   Future<void> _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      showWarningDialog(context, "Please fill up your account information");
+      showWarningDialog("Please fill up your account information");
     }
 
     setState(() {
@@ -86,40 +117,55 @@ class _LoginPageState extends State<LoginPage> {
       if (user != null && !user.emailVerified) {
         await FirebaseAuth.instance.signOut();
         await GoogleSignIn().signOut();
-        showWarningDialog(
-          context,
-          'Email not verified. Please check your inbox.',
-        );
+        showWarningDialog('Email not verified. Please check your inbox.');
       }
 
       if (user != null && user.emailVerified) {
-        showSuccessDialog(context, "Login successful");
+        final response = await accountService.login();
 
-        final String? result = await FirebaseAuth.instance.currentUser?.getIdToken(true);
+        if (response == null) {
+          showWarningDialog("Server is unavailable. Please try again later...");
+          context.read<AuthState>().logout();
 
-        
+          return;
+        } else if (response.statusCode == 200 || response.statusCode == 201) {
+          //welcome back & newcomers
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        } else if (response.statusCode == 401) {
+          showWarningDialog("Unauthorized");
 
-        final RegExp pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
-  pattern.allMatches(result!).forEach((RegExpMatch match) =>   print(match.group(0)));
+          context.read<AuthState>().logout();
+          return;
+        } else {
+          showWarningDialog("Server Error");
 
+          context.read<AuthState>().logout();
+          return;
+        }
+
+        showSuccessDialog("Login successful");
+        //final String? result = await FirebaseAuth.instance.currentUser?.getIdToken(true);
+
+        // final RegExp pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
+        // pattern.allMatches(result!).forEach((RegExpMatch match) =>   print(match.group(0)));
 
         //add navigator to homepage
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        showWarningDialog(context, 'No user found for that email.');
+        showWarningDialog('No user found for that email.');
       } else if (e.code == 'wrong-password') {
-        showWarningDialog(context, 'Wrong password provided for that user.');
+        showWarningDialog('Wrong password provided for that user.');
       } else if (e.code == 'invalid-credential') {
-        showWarningDialog(context, 'Wrong password provided.');
+        showWarningDialog('Wrong password provided.');
       } else {
-        showWarningDialog(
-          context,
-          'FirebaseAuthException: ${e.code} - ${e.message}',
-        );
+        showWarningDialog('FirebaseAuthException: ${e.code} - ${e.message}');
       }
     } catch (e) {
-      showWarningDialog(context, 'Unknown error: $e');
+      showWarningDialog('Unknown error: $e');
     }
 
     setState(() {
@@ -127,7 +173,7 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  void showSuccessDialog(BuildContext context, String message) {
+  void showSuccessDialog(String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -147,7 +193,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void showWarningDialog(BuildContext context, String message) {
+  void showWarningDialog(String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -258,7 +304,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Google Sign-In Button
                   GestureDetector(
                     onTap: () async {
                       await _loginWithGoogle();
@@ -300,7 +345,7 @@ class _LoginPageState extends State<LoginPage> {
                           }
                           if (result ==
                               "Please verify your account in your email inbox") {
-                            showSuccessDialog(context, result);
+                            showSuccessDialog(result);
                           }
                         },
                         child: Text(

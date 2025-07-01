@@ -4,12 +4,15 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
+import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Home/Presentation/homepage.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:smartsplitclient/Split/Presentation/choose_friend_page.dart';
 import 'package:smartsplitclient/Split/Presentation/ocr_loading_screen.dart';
 import 'package:smartsplitclient/Split/Presentation/split_result_page.dart';
 import 'package:smartsplitclient/Theme/light_theme.dart';
 import 'firebase_options.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   debugPrintGestureArenaDiagnostics = false;
@@ -17,10 +20,13 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MaterialApp(
-    theme: LightTheme().theme,
-    home: SafeArea(
-      child: ExperimentRoom(),
+  runApp(ChangeNotifierProvider(
+    create: (context) => AuthState(),
+    child: MaterialApp(
+      theme: LightTheme().theme,
+      home: SafeArea(
+        child: ExperimentRoom(),
+      ),
     ),
   ));
 }
@@ -70,6 +76,13 @@ class ExperimentRoom extends StatelessWidget {
                 );
               }, child: Text(
                 "login page"
+              ),),
+              ElevatedButton(onPressed: (){
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                );
+              }, child: Text(
+                "homepage"
               ),),
             ],
           ),
