@@ -1,0 +1,286 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
+import 'package:smartsplitclient/Authentication/Converter/account_converter.dart';
+import 'package:smartsplitclient/Authentication/Model/Account.dart';
+import 'package:smartsplitclient/Authentication/Service/account_service.dart';
+import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+
+class EditProfilePage extends StatefulWidget {
+  const EditProfilePage({super.key});
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _oldPasswordController = TextEditingController();
+  final TextEditingController _newPasswordController = TextEditingController();
+
+  final AccountService _accountService = AccountService();
+  final AccountConverter _accountConverter = AccountConverter();
+
+  bool _isPressedChangeUsername = false;
+  bool _isPressedChangePassword = false;
+
+
+  bool isLinkedWithGoogle = false;
+
+  bool isGoogleConnected(User user) {
+    return user.providerData.any((info) => info.providerId == 'google.com');
+  }
+
+  void showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success', style: TextStyle(color: Colors.green)),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _getTransparentButton(IconData icon, VoidCallback callback) {
+    return GestureDetector(
+      onTap: callback,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: EdgeInsetsGeometry.all(10),
+        child: Icon(
+          icon,
+          size: 35,
+          color: Theme.of(context).secondaryHeaderColor,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _connectGoogle() async {
+
+    await GoogleSignIn().signOut();
+
+    final googleUser = await GoogleSignIn().signIn();
+
+    final googleAuth = await googleUser?.authentication;
+
+    if (googleAuth != null) {
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      try {
+        await FirebaseAuth.instance.currentUser?.linkWithCredential(credential);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Google connected')));
+        setState(() {
+          isLinkedWithGoogle = true;
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Already linked or error: $e')));
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+
+    _usernameController.text = context.read<AuthState>().currentUser!.username;
+
+    if (user != null && isGoogleConnected(user)) {
+      isLinkedWithGoogle = true;
+    } else {
+      isLinkedWithGoogle = false;
+    }
+  }
+
+  void showWarningDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Warning', style: TextStyle(color: Colors.red)),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: (){
+        FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          toolbarHeight: 70,
+          backgroundColor: Theme.of(context).primaryColor,
+          leading: _getTransparentButton(Icons.arrow_back, () {
+            Navigator.pop(context);
+          }),
+          title: Text(
+            "Edit Profile",
+            style: TextStyle(color: Theme.of(context).colorScheme.surface),
+          ),
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    // Pick image (not implemented)
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage(
+                              context
+                                      .watch<AuthState>()
+                                      .currentUser
+                                      ?.profilePictureLink ??
+                                  '',
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 14,
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.edit, size: 16, color: Colors.black),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+      
+                TextField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: 'Username',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                ),
+                const SizedBox(height: 16),
+      
+                ElevatedButton.icon(
+                  onPressed: _isPressedChangeUsername ? null : () async {
+
+                      setState(() {
+                        _isPressedChangeUsername = true;
+                      });
+
+                      final response = await _accountService.changeUsername(_usernameController.text);
+
+                      if (response == null){
+                        showWarningDialog("Server can't be reached");
+
+                        setState(() {
+                        _isPressedChangeUsername = false;
+                        });
+
+                        return;
+                      }
+
+                      if (response.statusCode == 200){
+                        Account account = _accountConverter.convertFromResponse(response);
+
+                        context.read<AuthState>().updateUser(account);
+
+                        showSuccessDialog("Username updated to ${account.username}");
+
+                        
+                      }else if (response.statusCode == 400){
+                        showWarningDialog("Invalid username format. Please change your username");
+                      }else{
+                        showWarningDialog("Server error");
+                      }
+
+                      setState(() {
+                        _isPressedChangeUsername = false;
+                      });
+                  },
+                  icon: const Icon(Icons.save),
+                  label: Text(_isPressedChangeUsername ? 'Changing username...' : 'Change Username'),
+                ),
+                const SizedBox(height: 32),
+      
+                TextField(
+                  controller: _oldPasswordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Old Password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  obscureText: true,
+                  controller: _newPasswordController,
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                ),
+                const SizedBox(height: 16),
+      
+                ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.lock_open),
+                  label: const Text('Change Password'),
+                ),
+                const SizedBox(height: 32),
+      
+                // Connect to Google
+                ElevatedButton.icon(
+                  onPressed: isLinkedWithGoogle ? null : () {
+                    _connectGoogle();
+                  },
+                  icon: const Icon(Icons.link),
+                  label: Text(isLinkedWithGoogle ? 'Connected To Google' : 'Connect To Google Account'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

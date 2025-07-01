@@ -15,5 +15,12 @@ class AuthState with ChangeNotifier{
     notifyListeners();
   }
 
+
+  void updateUser(Account account){
+    currentUser = account;
+    
+    notifyListeners();
+  }
+
   
 }

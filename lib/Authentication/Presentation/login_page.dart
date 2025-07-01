@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:smartsplitclient/Authentication/Converter/account_converter.dart';
 import 'package:smartsplitclient/Authentication/Presentation/sign_up_page.dart';
 
-
 import 'package:smartsplitclient/Authentication/Service/account_service.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Home/Presentation/homepage.dart';
@@ -55,31 +54,31 @@ class _LoginPageState extends State<LoginPage> {
     UserCredential? userCredential = await signInWithGoogle();
 
     if (userCredential != null) {
+      final response = await accountService.login();
 
-        final response = await accountService.login();
+      if (response == null) {
+        showWarningDialog("Server is unavailable. Please try again later...");
+        context.read<AuthState>().logout();
+        return;
+      } else if (response.statusCode == 200 || response.statusCode == 201) {
+        //welcome back & newcomers
+        context.read<AuthState>().currentUser = accountConverter
+            .convertFromResponse(response);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else if (response.statusCode == 401) {
+        showWarningDialog("Unauthorized");
 
-        if (response == null) {
-          showWarningDialog("Server is unavailable. Please try again later...");
-          context.read<AuthState>().logout();
-          return;
-        } else if (response.statusCode == 200 || response.statusCode == 201) {
-          //welcome back & newcomers
-          context.read<AuthState>().currentUser = accountConverter.convertFromResponse(response);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        } else if (response.statusCode == 401) {
-          showWarningDialog("Unauthorized");
+        context.read<AuthState>().logout();
+        return;
+      } else {
+        showWarningDialog("Server Error. Status code: ${response.statusCode}");
 
-          context.read<AuthState>().logout();
-          return;
-        } else {
-          showWarningDialog("Server Error. Status code: ${response.statusCode}");
-
-          context.read<AuthState>().logout();
-          return;
-        }
+        context.read<AuthState>().logout();
+        return;
+      }
       // showSuccessDialog("Signed in successful. ${userCredential.user?.email}");
 
       // final String? result = await FirebaseAuth.instance.currentUser
@@ -126,10 +125,10 @@ class _LoginPageState extends State<LoginPage> {
         if (response == null) {
           showWarningDialog("Server is unavailable. Please try again later...");
           context.read<AuthState>().logout();
-
-          return;
         } else if (response.statusCode == 200 || response.statusCode == 201) {
           //welcome back & newcomers
+          context.read<AuthState>().currentUser = accountConverter
+              .convertFromResponse(response);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomePage()),
@@ -138,15 +137,15 @@ class _LoginPageState extends State<LoginPage> {
           showWarningDialog("Unauthorized");
 
           context.read<AuthState>().logout();
-          return;
         } else {
-          showWarningDialog("Server Error");
+          showWarningDialog(
+            "Server Error. Status code: ${response.statusCode}",
+          );
 
+          print(response.body);
           context.read<AuthState>().logout();
-          return;
         }
 
-        showSuccessDialog("Login successful");
         //final String? result = await FirebaseAuth.instance.currentUser?.getIdToken(true);
 
         // final RegExp pattern = RegExp('.{1,800}'); // 800 is the size of each chunk

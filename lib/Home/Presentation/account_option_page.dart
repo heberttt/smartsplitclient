@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Home/Presentation/edit_profile_page.dart';
 
 class AccountOptionPage extends StatefulWidget {
   const AccountOptionPage({super.key});
@@ -13,10 +14,12 @@ class AccountOptionPage extends StatefulWidget {
 }
 
 class _AccountOptionPageState extends State<AccountOptionPage> {
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -25,6 +28,7 @@ class _AccountOptionPageState extends State<AccountOptionPage> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
+                color: Colors.white,
                 shape: BoxShape.circle,
                 image: DecorationImage(
                   image: NetworkImage(
@@ -51,14 +55,10 @@ class _AccountOptionPageState extends State<AccountOptionPage> {
               icon: Icons.edit,
               label: 'Edit Profile',
               onTap: () {
-                // Navigate to edit profile page
-              },
-            ),
-            _buildButton(
-              icon: Icons.lock,
-              label: 'Change Password',
-              onTap: () {
-                // Navigate to change password screen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => EditProfilePage()),
+                );
               },
             ),
             _buildButton(
