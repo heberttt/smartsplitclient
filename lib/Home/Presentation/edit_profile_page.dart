@@ -18,6 +18,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmNewPasswordController = TextEditingController();
 
   final AccountService _accountService = AccountService();
   final AccountConverter _accountConverter = AccountConverter();
@@ -27,6 +28,53 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
 
   bool isLinkedWithGoogle = false;
+
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+
+  try{
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      showWarningDialog("No user signed in");
+      return;
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: context.read<AuthState>().currentUser!.email,
+      password: oldPassword,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+  }catch(e){
+    showWarningDialog("Old password is incorrect");
+    print(e);
+    return;
+  }
+
+  try {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      await user.updatePassword(newPassword);
+      showSuccessDialog("Password has been successfully changed");
+      print("Password updated successfully");
+    } else {
+      showWarningDialog("No user is currently signed in");
+      print("No user is currently signed in.");
+    }
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'requires-recent-login') {
+      showWarningDialog("User must re-authenticate before changing the password.");
+      print("User must re-authenticate before changing the password.");
+    } else {
+      showWarningDialog("Error: ${e.message}");
+      print("Error: ${e.message}");
+    }
+  } catch (e) {
+    showWarningDialog("Unexpected error: $e");
+    print("Unexpected error: $e");
+  }
+}
 
   bool isGoogleConnected(User user) {
     return user.providerData.any((info) => info.providerId == 'google.com');
@@ -52,9 +100,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Widget _getTransparentButton(IconData icon, VoidCallback callback) {
+  Widget _getTransparentButton(IconData icon) {
     return GestureDetector(
-      onTap: callback,
+      onTap: (){
+        Navigator.pop(context);
+      },
       behavior: HitTestBehavior.opaque,
       child: Padding(
         padding: EdgeInsetsGeometry.all(10),
@@ -138,9 +188,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         appBar: AppBar(
           toolbarHeight: 70,
           backgroundColor: Theme.of(context).primaryColor,
-          leading: _getTransparentButton(Icons.arrow_back, () {
-            Navigator.pop(context);
-          }),
+          leading: _getTransparentButton(Icons.arrow_back,),
           title: Text(
             "Edit Profile",
             style: TextStyle(color: Theme.of(context).colorScheme.surface),
@@ -240,7 +288,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
                 const SizedBox(height: 32),
       
-                TextField(
+                isLinkedWithGoogle ? SizedBox() : TextField(
                   controller: _oldPasswordController,
                   obscureText: true,
                   decoration: InputDecoration(
@@ -250,7 +298,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                TextField(
+                isLinkedWithGoogle ? SizedBox() : TextField(
                   obscureText: true,
                   controller: _newPasswordController,
                   decoration: InputDecoration(
@@ -260,9 +308,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                isLinkedWithGoogle ? SizedBox() : TextField(
+                  obscureText: true,
+                  controller: _confirmNewPasswordController,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm New Password',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                ),
+                const SizedBox(height: 16),
       
-                ElevatedButton.icon(
-                  onPressed: () {},
+                isLinkedWithGoogle ? SizedBox() : ElevatedButton.icon(
+                  onPressed: _isPressedChangePassword ? null : () async {
+                    setState(() {
+                      _isPressedChangePassword = true;
+                    });
+
+                    if (_newPasswordController.text != _confirmNewPasswordController.text){
+                      showWarningDialog("Old and new password are different");
+                      setState(() {
+                      _isPressedChangePassword = false;
+                      });
+                      return;
+                    }
+
+                    if (_oldPasswordController.text.isEmpty || _newPasswordController.text.isEmpty || _confirmNewPasswordController.text.isEmpty){
+                      showWarningDialog("Please fill in the password details");
+                      setState(() {
+                      _isPressedChangePassword = false;
+                      });
+                      return;
+                    }
+
+                    await changePassword(_oldPasswordController.text, _newPasswordController.text);
+                    
+
+                    setState(() {
+                      _isPressedChangePassword = false;
+                    });
+                  },
                   icon: const Icon(Icons.lock_open),
                   label: const Text('Change Password'),
                 ),
@@ -270,8 +355,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       
                 // Connect to Google
                 ElevatedButton.icon(
-                  onPressed: isLinkedWithGoogle ? null : () {
-                    _connectGoogle();
+                  onPressed: isLinkedWithGoogle ? null : () async {
+                    await _connectGoogle();
                   },
                   icon: const Icon(Icons.link),
                   label: Text(isLinkedWithGoogle ? 'Connected To Google' : 'Connect To Google Account'),

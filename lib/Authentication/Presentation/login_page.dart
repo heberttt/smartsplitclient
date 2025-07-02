@@ -54,6 +54,8 @@ class _LoginPageState extends State<LoginPage> {
     UserCredential? userCredential = await signInWithGoogle();
 
     if (userCredential != null) {
+
+      try{
       final response = await accountService.login();
 
       if (response == null) {
@@ -90,9 +92,17 @@ class _LoginPageState extends State<LoginPage> {
       // pattern
       //     .allMatches(result!)
       //     .forEach((RegExpMatch match) => print(match.group(0)));
+
+      }catch(e){
+        showWarningDialog(
+          "Sign in failed. Server is unreachable"
+        );
+      }
+
     } else {
       showWarningDialog("Sign in failed.");
     }
+    
   }
 
   Future<void> _login() async {

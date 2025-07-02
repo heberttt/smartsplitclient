@@ -55,7 +55,7 @@ class _AccountOptionPageState extends State<AccountOptionPage> {
               icon: Icons.edit,
               label: 'Edit Profile',
               onTap: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => EditProfilePage()),
                 );
