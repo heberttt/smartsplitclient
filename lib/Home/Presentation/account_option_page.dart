@@ -1,6 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
@@ -14,7 +12,6 @@ class AccountOptionPage extends StatefulWidget {
 }
 
 class _AccountOptionPageState extends State<AccountOptionPage> {
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -24,21 +21,22 @@ class _AccountOptionPageState extends State<AccountOptionPage> {
           padding: const EdgeInsets.all(16),
           children: [
             const SizedBox(height: 30),
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: NetworkImage(
-                    context
-                            .watch<AuthState>()
-                            .currentUser
-                            ?.profilePictureLink ??
-                        '',
+            Center(
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: NetworkImage(
+                      context
+                              .watch<AuthState>()
+                              .currentUser
+                              ?.profilePictureLink ??
+                          '',
+                    ),
                   ),
-                  fit: BoxFit.contain,
                 ),
               ),
             ),

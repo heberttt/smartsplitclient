@@ -18,7 +18,11 @@ class AuthState with ChangeNotifier{
 
   void updateUser(Account account){
     currentUser = account;
-    
+
+    if (currentUser != null){
+      currentUser!.profilePictureLink = "${currentUser!.profilePictureLink}&t=${DateTime.now().millisecondsSinceEpoch}";
+    }
+
     notifyListeners();
   }
 
