@@ -12,7 +12,8 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    Center(child: Text('Group', style: TextStyle(fontSize: 24))),
+    Center(child: Text('Home', style: TextStyle(fontSize: 24))),
+    Center(child: Text('Friend', style: TextStyle(fontSize: 24))),
     Center(child: Text('Split', style: TextStyle(fontSize: 24))),
     Center(child: Text('History', style: TextStyle(fontSize: 24))),
     AccountOptionPage(),
@@ -31,6 +32,11 @@ class _HomePageState extends State<HomePage> {
         unselectedItemColor: Color.fromRGBO(171, 155, 150, 100),
         type: BottomNavigationBarType.fixed,
         items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: '',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.group_outlined),
             activeIcon: Icon(Icons.group),

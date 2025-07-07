@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Friend/Presentation/friends_page.dart';
 import 'package:smartsplitclient/Home/Presentation/homepage.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:smartsplitclient/Split/Presentation/choose_friend_page.dart';
@@ -83,6 +84,13 @@ class ExperimentRoom extends StatelessWidget {
                 );
               }, child: Text(
                 "homepage"
+              ),),
+              ElevatedButton(onPressed: (){
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => FriendsPage()),
+                );
+              }, child: Text(
+                "friends"
               ),),
             ],
           ),
