@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Friend/Presentation/friends_page.dart';
+import 'package:smartsplitclient/Friend/State/friend_state.dart';
 import 'package:smartsplitclient/Home/Presentation/homepage.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:smartsplitclient/Split/Presentation/choose_friend_page.dart';
@@ -18,24 +19,25 @@ import 'package:provider/provider.dart';
 Future<void> main() async {
   debugPrintGestureArenaDiagnostics = false;
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(ChangeNotifierProvider(
-    create: (context) => AuthState(),
-    child: MaterialApp(
-      theme: LightTheme().theme,
-      home: SafeArea(
-        child: ExperimentRoom(),
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthState()),
+        ChangeNotifierProvider(
+          create: (context) => FriendState()..getMyFriends(),
+        ),
+      ],
+      child: MaterialApp(
+        theme: LightTheme().theme,
+        home: const SafeArea(child: ExperimentRoom()),
       ),
     ),
-  ));
+  );
 }
 
 class ExperimentRoom extends StatelessWidget {
-  const ExperimentRoom({
-    super.key,
-  });
+  const ExperimentRoom({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -46,52 +48,61 @@ class ExperimentRoom extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ElevatedButton(onPressed: (){
-              }, child: Text(
-                "test"
-              )),
-              ElevatedButton(onPressed: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const ChooseFriendPage()),
-                );
-              }, child: Text(
-                "split"
-              ),),
-              ElevatedButton(onPressed: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => OcrLoadingScreen(File(""))),
-                );
-              }, child: Text(
-                "split"
-              ),),
-              ElevatedButton(onPressed: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => SplitResultPage(Receipt())),
-                );
-              }, child: Text(
-                "split page result"
-              ),),
-              ElevatedButton(onPressed: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
-              }, child: Text(
-                "login page"
-              ),),
-              ElevatedButton(onPressed: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                );
-              }, child: Text(
-                "homepage"
-              ),),
-              ElevatedButton(onPressed: (){
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => FriendsPage()),
-                );
-              }, child: Text(
-                "friends"
-              ),),
+              ElevatedButton(onPressed: () {}, child: Text("test")),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ChooseFriendPage(),
+                    ),
+                  );
+                },
+                child: Text("split"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => OcrLoadingScreen(File("")),
+                    ),
+                  );
+                },
+                child: Text("split"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => SplitResultPage(Receipt()),
+                    ),
+                  );
+                },
+                child: Text("split page result"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (context) => LoginPage()));
+                },
+                child: Text("login page"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (context) => HomePage()));
+                },
+                child: Text("homepage"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => FriendsPage()),
+                  );
+                },
+                child: Text("friends"),
+              ),
             ],
           ),
         ),

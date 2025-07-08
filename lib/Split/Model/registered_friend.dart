@@ -14,15 +14,16 @@ class RegisteredFriend extends Friend{
 
   @override
   String getName() {
-    // TODO: implement getName
-    throw UnimplementedError();
+    return username;
   }
   
   @override
   Widget getProfilePicture(double width) {
-    // TODO: implement getProfilePicture
-    throw UnimplementedError();
+    return Image.network(
+    profilePictureLink,
+    width: width,
+    fit: BoxFit.cover,
+  );
   }
 
-  
 }

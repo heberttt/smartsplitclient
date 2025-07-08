@@ -1,9 +1,10 @@
-class Friendrequest {
-  late String id;
+class FriendRequest {
+  late int requestId;
+  late String userId;
   late String email;
   late String username;
   late String profilePictureLink;
 
-  Friendrequest(this.id, this.email, this.username, this.profilePictureLink);
+  FriendRequest(this.userId, this.email, this.username, this.profilePictureLink, this.requestId);
   
 }
