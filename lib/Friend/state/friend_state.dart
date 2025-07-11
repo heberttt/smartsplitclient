@@ -49,4 +49,12 @@ class FriendState with ChangeNotifier {
     }
     return false;
   }
+
+  void clear() {
+    myFriends = [];
+    myFriendRequests = [];
+    isLoadingFriends = false;
+    isLoadingFriendRequests = false;
+    notifyListeners();
+  }
 }

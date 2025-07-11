@@ -78,7 +78,7 @@ class _AccountOptionPageState extends State<AccountOptionPage> {
               icon: Icons.logout,
               label: 'Logout',
               onTap: () async {
-                context.read<AuthState>().logout();
+                context.read<AuthState>().logout(context);
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => LoginPage()),

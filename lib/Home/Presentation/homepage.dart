@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smartsplitclient/Friend/Presentation/friends_page.dart';
+import 'package:smartsplitclient/Group/Presentation/group_page.dart';
 import 'package:smartsplitclient/Home/Presentation/account_option_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -13,7 +14,7 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    Center(child: Text('Home', style: TextStyle(fontSize: 24))),
+    GroupPage(),
     FriendsPage(),
     Center(child: Text('Split', style: TextStyle(fontSize: 24))),
     Center(child: Text('History', style: TextStyle(fontSize: 24))),

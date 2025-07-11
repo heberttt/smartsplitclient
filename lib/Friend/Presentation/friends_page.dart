@@ -118,10 +118,7 @@ class _FriendsPageState extends State<FriendsPage> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
-              if (value == 'edit') {
-                print('Edit ${registeredFriend.username}');
-                // TODO: Add edit logic
-              } else if (value == 'delete') {
+              if (value == 'delete') {
                 showDialog(
                   context: context,
                   builder:

@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response == null) {
         showWarningDialog("Server is unavailable. Please try again later...");
-        context.read<AuthState>().logout();
+        context.read<AuthState>().logout(context);
         return;
       } else if (response.statusCode == 200 || response.statusCode == 201) {
         //welcome back & newcomers
@@ -73,12 +73,12 @@ class _LoginPageState extends State<LoginPage> {
       } else if (response.statusCode == 401) {
         showWarningDialog("Unauthorized");
 
-        context.read<AuthState>().logout();
+        context.read<AuthState>().logout(context);
         return;
       } else {
         showWarningDialog("Server Error. Status code: ${response.statusCode}");
 
-        context.read<AuthState>().logout();
+        context.read<AuthState>().logout(context);
         return;
       }
       // showSuccessDialog("Signed in successful. ${userCredential.user?.email}");
@@ -134,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
 
         if (response == null) {
           showWarningDialog("Server is unavailable. Please try again later...");
-          context.read<AuthState>().logout();
+          context.read<AuthState>().logout(context);
         } else if (response.statusCode == 200 || response.statusCode == 201) {
           //welcome back & newcomers
           context.read<AuthState>().currentUser = accountConverter
@@ -146,14 +146,14 @@ class _LoginPageState extends State<LoginPage> {
         } else if (response.statusCode == 401) {
           showWarningDialog("Unauthorized");
 
-          context.read<AuthState>().logout();
+          context.read<AuthState>().logout(context);
         } else {
           showWarningDialog(
             "Server Error. Status code: ${response.statusCode}",
           );
 
           print(response.body);
-          context.read<AuthState>().logout();
+          context.read<AuthState>().logout(context);
         }
 
         //final String? result = await FirebaseAuth.instance.currentUser?.getIdToken(true);

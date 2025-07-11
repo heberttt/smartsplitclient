@@ -7,6 +7,8 @@ import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Friend/Presentation/friends_page.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
+import 'package:smartsplitclient/Group/Presentation/group_page.dart';
+import 'package:smartsplitclient/Group/State/group_state.dart';
 import 'package:smartsplitclient/Home/Presentation/homepage.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:smartsplitclient/Split/Presentation/choose_friend_page.dart';
@@ -27,6 +29,9 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (context) => FriendState()..getMyFriends(),
         ),
+        ChangeNotifierProvider(
+          create: (context) => GroupState()..getMyGroups(),
+        )
       ],
       child: MaterialApp(
         theme: LightTheme().theme,
@@ -102,6 +107,14 @@ class ExperimentRoom extends StatelessWidget {
                   );
                 },
                 child: Text("friends"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => GroupPage()),
+                  );
+                },
+                child: Text("groups"),
               ),
             ],
           ),
