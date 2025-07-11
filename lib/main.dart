@@ -15,6 +15,7 @@ import 'package:smartsplitclient/Split/Presentation/choose_friend_page.dart';
 import 'package:smartsplitclient/Split/Presentation/ocr_loading_screen.dart';
 import 'package:smartsplitclient/Split/Presentation/split_result_page.dart';
 import 'package:smartsplitclient/Theme/light_theme.dart';
+import 'package:smartsplitclient/auth_gate.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 
@@ -22,20 +23,19 @@ Future<void> main() async {
   debugPrintGestureArenaDiagnostics = false;
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthState()),
-        ChangeNotifierProvider(
-          create: (context) => FriendState()..getMyFriends(),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => GroupState()..getMyGroups(),
-        )
+        ChangeNotifierProvider(create: (context) => FriendState()..getMyFriends()),
+        ChangeNotifierProvider(create: (context) => GroupState()..getMyGroups()),
       ],
       child: MaterialApp(
         theme: LightTheme().theme,
-        home: const SafeArea(child: ExperimentRoom()),
+        home: SafeArea(
+          child: const AuthGate(),
+        ),
       ),
     ),
   );

@@ -43,7 +43,7 @@ class _AccountOptionPageState extends State<AccountOptionPage> {
             const SizedBox(height: 10),
             Center(
               child: Text(
-                context.watch<AuthState>().currentUser!.username,
+                context.read<AuthState>().currentUser == null ? "Guest" : context.watch<AuthState>().currentUser!.username,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),

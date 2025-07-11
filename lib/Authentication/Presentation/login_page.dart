@@ -54,55 +54,51 @@ class _LoginPageState extends State<LoginPage> {
     UserCredential? userCredential = await signInWithGoogle();
 
     if (userCredential != null) {
+      try {
+        final response = await accountService.login();
 
-      try{
-      final response = await accountService.login();
+        if (response == null) {
+          showWarningDialog("Server is unavailable. Please try again later...");
+          context.read<AuthState>().logout(context);
+          return;
+        } else if (response.statusCode == 200 || response.statusCode == 201) {
+          //welcome back & newcomers
+          final account = accountConverter.convertFromResponse(response);
+          context.read<AuthState>().updateUser(account);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        } else if (response.statusCode == 401) {
+          showWarningDialog("Unauthorized");
 
-      if (response == null) {
-        showWarningDialog("Server is unavailable. Please try again later...");
-        context.read<AuthState>().logout(context);
-        return;
-      } else if (response.statusCode == 200 || response.statusCode == 201) {
-        //welcome back & newcomers
-        context.read<AuthState>().currentUser = accountConverter
-            .convertFromResponse(response);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-        );
-      } else if (response.statusCode == 401) {
-        showWarningDialog("Unauthorized");
+          context.read<AuthState>().logout(context);
+          return;
+        } else {
+          showWarningDialog(
+            "Server Error. Status code: ${response.statusCode}",
+          );
 
-        context.read<AuthState>().logout(context);
-        return;
-      } else {
-        showWarningDialog("Server Error. Status code: ${response.statusCode}");
+          context.read<AuthState>().logout(context);
+          return;
+        }
+        // showSuccessDialog("Signed in successful. ${userCredential.user?.email}");
 
-        context.read<AuthState>().logout(context);
-        return;
+        // final String? result = await FirebaseAuth.instance.currentUser
+        //     ?.getIdToken(true);
+
+        // final RegExp pattern = RegExp(
+        //   '.{1,800}',
+        // ); // 800 is the size of each chunk
+        // pattern
+        //     .allMatches(result!)
+        //     .forEach((RegExpMatch match) => print(match.group(0)));
+      } catch (e) {
+        showWarningDialog("Sign in failed. Server is unreachable");
       }
-      // showSuccessDialog("Signed in successful. ${userCredential.user?.email}");
-
-      // final String? result = await FirebaseAuth.instance.currentUser
-      //     ?.getIdToken(true);
-
-      // final RegExp pattern = RegExp(
-      //   '.{1,800}',
-      // ); // 800 is the size of each chunk
-      // pattern
-      //     .allMatches(result!)
-      //     .forEach((RegExpMatch match) => print(match.group(0)));
-
-      }catch(e){
-        showWarningDialog(
-          "Sign in failed. Server is unreachable"
-        );
-      }
-
     } else {
       showWarningDialog("Sign in failed.");
     }
-    
   }
 
   Future<void> _login() async {
@@ -137,8 +133,8 @@ class _LoginPageState extends State<LoginPage> {
           context.read<AuthState>().logout(context);
         } else if (response.statusCode == 200 || response.statusCode == 201) {
           //welcome back & newcomers
-          context.read<AuthState>().currentUser = accountConverter
-              .convertFromResponse(response);
+          final account = accountConverter.convertFromResponse(response);
+          context.read<AuthState>().updateUser(account);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomePage()),
@@ -268,7 +264,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Login Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -284,7 +279,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Forgot Password
                   Align(
                     alignment: Alignment.center,
                     child: TextButton(
@@ -300,7 +294,6 @@ class _LoginPageState extends State<LoginPage> {
 
                   const SizedBox(height: 24),
 
-                  // Or Connect With
                   Row(
                     children: [
                       const Expanded(child: Divider(thickness: 1)),
