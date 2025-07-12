@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Expense/Presentation/your_expenses_page.dart';
 import 'package:smartsplitclient/Friend/Presentation/friends_page.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
 import 'package:smartsplitclient/Group/Presentation/group_page.dart';
@@ -115,6 +116,14 @@ class ExperimentRoom extends StatelessWidget {
                   );
                 },
                 child: Text("groups"),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => YourExpensesPage()),
+                  );
+                },
+                child: Text("expense"),
               ),
             ],
           ),

@@ -186,40 +186,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Or Connect With
-                  Row(
-                    children: const [
-                      Expanded(child: Divider(thickness: 1)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('or connect with'),
-                      ),
-                      Expanded(child: Divider(thickness: 1)),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Google Sign-In Button
-                  GestureDetector(
-                    onTap: () {
-                      // Handle Google sign-in
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                      child: Image.asset(
-                        'assets/google-logo.png',
-                        height: 30,
-                        width: 30,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Already have an account
+              
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

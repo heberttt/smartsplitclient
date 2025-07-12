@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:smartsplitclient/Authentication/Presentation/login_page.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Home/Presentation/edit_profile_page.dart';
+import 'package:smartsplitclient/main.dart';
 
 class AccountOptionPage extends StatefulWidget {
   const AccountOptionPage({super.key});
@@ -70,7 +71,13 @@ class _AccountOptionPageState extends State<AccountOptionPage> {
               icon: Icons.settings,
               label: 'App Settings',
               onTap: () {
-                // Navigate to app settings
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    pageBuilder: (_, _, _) => ExperimentRoom(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
               },
             ),
             const Divider(height: 40),

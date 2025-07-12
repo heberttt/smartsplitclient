@@ -25,6 +25,26 @@ class _LoginPageState extends State<LoginPage> {
   final AccountConverter accountConverter = AccountConverter();
 
   String _loginButtonText = "Login";
+  bool _isLoading = false;
+
+  Future<void> _sendResetEmail() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: _emailController.text.trim(),
+      );
+      showSuccessDialog("Password reset email sent. Check your inbox");
+    } on FirebaseAuthException catch (e) {
+      showWarningDialog(e.toString());
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
@@ -236,11 +256,9 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const SizedBox(height: 40),
 
-                  // Logo
                   Image.asset('assets/logo.png', height: 150),
                   const SizedBox(height: 40),
 
-                  // Email TextField
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -252,7 +270,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Password TextField
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
@@ -282,8 +299,12 @@ class _LoginPageState extends State<LoginPage> {
                   Align(
                     alignment: Alignment.center,
                     child: TextButton(
-                      onPressed: () {
-                        // Handle forgot password
+                      onPressed: () async {
+
+                        if (_emailController.text.isEmpty){
+                          showWarningDialog("Enter your email in the textbox");
+                        }
+                        await _sendResetEmail();
                       },
                       child: const Text(
                         'Forgot your password?',
