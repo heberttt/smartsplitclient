@@ -15,4 +15,6 @@ class BackendUrl {
   static const String FRIEND_REQUEST_SERVICE = "$GATEWAY_URL/friendRequest";
 
   static const String GROUP_SERVICE = "$GATEWAY_URL/groups";
+
+  static const String SPLIT_SERVICE = "$GATEWAY_URL/splits";
 }

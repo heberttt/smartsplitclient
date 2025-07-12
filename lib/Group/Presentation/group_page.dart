@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smartsplitclient/Expense/Presentation/your_expenses_page.dart';
 import 'package:smartsplitclient/Group/Model/group.dart';
 import 'package:smartsplitclient/Group/Presentation/choose_group_members.dart';
 import 'package:smartsplitclient/Group/State/group_state.dart';
@@ -63,28 +64,39 @@ class _GroupPageState extends State<GroupPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                  PageRouteBuilder(
+                    pageBuilder: (_, _, _) => YourExpensesPage(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
                   ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: colorScheme.secondaryContainer,
-                        foregroundImage: const AssetImage(
-                          "assets/user-profile.png",
+                );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: colorScheme.secondaryContainer,
+                          foregroundImage: const AssetImage(
+                            "assets/user-profile.png",
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'Non-group expenses',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                        const SizedBox(width: 16),
+                        Text(
+                          'Non-group expenses',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
