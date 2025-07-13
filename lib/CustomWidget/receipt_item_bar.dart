@@ -188,6 +188,54 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
     );
   }
 
+  Future<double?> _popUpTotalPriceValue(int currentPrice, BuildContext context) async {
+    final controller = TextEditingController();
+    InputDecoration decoration = InputDecoration(
+      hintText: "${currentPrice / 100}",
+    );
+
+    return await showDialog<double>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder:
+              (context, setState) => AlertDialog(
+                title: Text('Enter price'),
+                content: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  decoration: decoration,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      final input = double.tryParse(controller.text);
+                      if (input != null &&
+                          input >= 0) {
+                        Navigator.of(context).pop(input);
+                      } else {
+                        setState(() {
+                          controller.text = "";
+                          decoration = InputDecoration(
+                            hintText:
+                                "Please enter a price more than 0",
+                            hintStyle: TextStyle(
+                              color: Colors.red,
+                              fontSize: 10,
+                            ),
+                          );
+                        });
+                      }
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+        );
+      },
+    );
+  }
+
   Widget _constructProfile(Friend friend, int index) {
     return Padding(
       padding: EdgeInsets.only(left: (profilePaddingDistance * index)),
@@ -359,8 +407,17 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                     _getAllProfile(),
                     Padding(
                       padding: const EdgeInsets.only(right: 12),
-                      child: Text(
-                        "Total Price: RM${widget.item.totalPrice / 100}",
+                      child: GestureDetector(
+                        onTap: () async {
+                          double? value = await _popUpTotalPriceValue(widget.item.totalPrice, context);
+
+                          if (value != null){
+                            widget.item.totalPrice = (value * 100).round();
+                          }
+                        },
+                        child: Text(
+                          "Total Price: RM${widget.item.totalPrice / 100}",
+                        ),
                       ),
                     ),
                   ],

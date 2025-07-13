@@ -17,6 +17,8 @@ class SplitBill {
     required this.members,
   });
 
+  
+
   factory SplitBill.fromJson(Map<String, dynamic> json) {
     final receiptJson = json['receipt'];
     final creatorId = json['creatorId'];

@@ -8,6 +8,7 @@ import 'package:smartsplitclient/Expense/Service/split_service.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 import 'package:smartsplitclient/Split/Presentation/non_group_choose_friend_page.dart';
+import 'package:smartsplitclient/Split/Presentation/non_group_view_split_page.dart';
 
 abstract class ExpenseListItem {}
 
@@ -26,12 +27,14 @@ class Expense {
   final String subtitle;
   final DateTime date;
   final String? profilePictureLink;
+  final SplitBill splitBill;
 
   Expense({
     required this.title,
     required this.subtitle,
     required this.date,
     required this.profilePictureLink,
+    required this.splitBill,
   });
 }
 
@@ -68,19 +71,18 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     try {
       final friendState = context.read<FriendState>();
       final friends = friendState.myFriends;
-
       Account? currentUser = context.read<AuthState>().currentUser;
-
-      List<SplitBill> bills = await _splitService.getMySplitBills();
+      List<SplitBill> bills = await _splitService.getMySplitBills(
+        context.read<FriendState>().myFriends,
+        context.read<AuthState>().currentUser,
+      );
 
       List<Expense> allExpenses =
           bills.map((bill) {
-            final paid =
-                bill.receipt.receiptItems.fold<int>(
-                  0,
-                  (sum, item) => sum + item.totalPrice,
-                ) /
-                100;
+            final paid = (bill.members
+                    .fold<int>(0, (sum, m) => sum + m.totalDebt) + bill.receipt.roundingAdjustment) /
+                100 ;
+
             final owed =
                 bill.members
                     .where((m) => !m.hasPaid)
@@ -103,9 +105,11 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
 
             return Expense(
               title: bill.receipt.title,
-              subtitle: 'You paid for RM$paid\nYou are still owed RM$owed',
+              subtitle:
+                  'You paid for RM$paid\nYou are still owed RM$owed',
               date: bill.receipt.now,
               profilePictureLink: profilePicture,
+              splitBill: bill,
             );
           }).toList();
 
@@ -147,6 +151,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
   @override
   Widget build(BuildContext context) {
     final items = _flattenedExpenseItems();
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -231,6 +236,16 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                                 subtitle: item.expense.subtitle,
                                 profilePictureLink:
                                     item.expense.profilePictureLink,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder:
+                                          (_) => NonGroupViewSplitPage(
+                                            item.expense.splitBill,
+                                          ),
+                                    ),
+                                  );
+                                },
                               );
                             }
 
@@ -250,7 +265,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
           onPressed: () {
             Navigator.of(context).push(
               PageRouteBuilder(
-                pageBuilder: (_, _, _) => NonGroupChooseFriendPage(),
+                pageBuilder: (_, __, ___) => NonGroupChooseFriendPage(),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),
@@ -267,10 +282,12 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     required String title,
     required String subtitle,
     required String? profilePictureLink,
+    required VoidCallback onTap,
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
+        onTap: onTap,
         leading: CircleAvatar(
           backgroundColor: Colors.white,
           foregroundImage:
