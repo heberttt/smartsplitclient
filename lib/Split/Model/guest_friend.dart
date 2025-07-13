@@ -19,4 +19,12 @@ class GuestFriend implements Friend{
         );
   }
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GuestFriend && runtimeType == other.runtimeType && name == other.name;
+
+  @override
+  int get hashCode => name.hashCode;
+
 }

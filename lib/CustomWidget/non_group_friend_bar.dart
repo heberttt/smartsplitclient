@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:smartsplitclient/Authentication/Model/Account.dart';
+import 'package:smartsplitclient/Split/Model/friend.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 
-class MemberBar extends StatelessWidget {
-  const MemberBar(this.friends, this.currentUser, {required this.onRemove, super.key});
+class NonGroupFriendBar extends StatelessWidget {
+  const NonGroupFriendBar(
+    this.friends,
+    this.currentUser, {
+    required this.onRemove,
+    super.key,
+  });
 
-  final List<RegisteredFriend> friends;
+  final List<Friend> friends;
   final Account currentUser;
-  final void Function(RegisteredFriend) onRemove;
+  final void Function(Friend) onRemove;
 
-  Widget constructProfile(BuildContext context, RegisteredFriend friend) {
+  Widget constructProfile(BuildContext context, Friend friend) {
     String displayName = () {
       String name = friend.getName();
       if (name.length > 10) return "${name.substring(0, 7)}...";
@@ -38,13 +44,14 @@ class MemberBar extends StatelessWidget {
               ),
             ],
           ),
-          if (friend.id != currentUser.id)
+          if ((friend is RegisteredFriend && friend.id != currentUser.id) ||
+              (friend is! RegisteredFriend))
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
                   onTap: () {
-                    onRemove(friend); 
+                    onRemove(friend);
                   },
                   child: const Icon(Icons.close, size: 10),
                 ),
@@ -57,9 +64,8 @@ class MemberBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final profiles = friends
-        .map((friend) => constructProfile(context, friend))
-        .toList();
+    final profiles =
+        friends.map((friend) => constructProfile(context, friend)).toList();
 
     return Row(
       mainAxisSize: MainAxisSize.max,

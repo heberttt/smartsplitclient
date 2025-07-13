@@ -7,6 +7,7 @@ import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:smartsplitclient/Expense/Service/split_service.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
+import 'package:smartsplitclient/Split/Presentation/non_group_choose_friend_page.dart';
 
 abstract class ExpenseListItem {}
 
@@ -72,37 +73,43 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
 
       List<SplitBill> bills = await _splitService.getMySplitBills();
 
-      List<Expense> allExpenses = bills.map((bill) {
-        final paid = bill.receipt.receiptItems.fold<int>(
-              0,
-              (sum, item) => sum + item.totalPrice,
-            ) /
-            100;
-        final owed = bill.members
-                .where((m) => !m.hasPaid)
-                .fold<int>(0, (sum, m) => sum + m.totalDebt) /
-            100;
+      List<Expense> allExpenses =
+          bills.map((bill) {
+            final paid =
+                bill.receipt.receiptItems.fold<int>(
+                  0,
+                  (sum, item) => sum + item.totalPrice,
+                ) /
+                100;
+            final owed =
+                bill.members
+                    .where((m) => !m.hasPaid)
+                    .fold<int>(0, (sum, m) => sum + m.totalDebt) /
+                100;
 
-        String? profilePicture;
+            String? profilePicture;
 
-        if (currentUser != null || currentUser!.id == bill.creatorId){
-          profilePicture = currentUser.profilePictureLink;
-        }else{
-        final creator = friends.firstWhere(
-          (f) => f.id == bill.creatorId,
-          orElse: () => RegisteredFriend('', '', '', ''),
-        );
-        if (creator.id.isNotEmpty) {
-          profilePicture = creator.profilePictureLink;
-        }
-        }
-        return Expense(
-          title: bill.receipt.title,
-          subtitle: 'You paid for RM$paid\nYou are still owed RM$owed',
-          date: bill.receipt.now,
-          profilePictureLink: profilePicture,
-        );
-      }).toList();
+            if (currentUser != null && currentUser.id == bill.creatorId) {
+              profilePicture = currentUser.profilePictureLink;
+            } else {
+              final creator = friends.firstWhere(
+                (f) => f.id == bill.creatorId,
+                orElse: () => RegisteredFriend('', '', '', ''),
+              );
+              if (creator.id.isNotEmpty) {
+                profilePicture = creator.profilePictureLink;
+              }
+            }
+
+            return Expense(
+              title: bill.receipt.title,
+              subtitle: 'You paid for RM$paid\nYou are still owed RM$owed',
+              date: bill.receipt.now,
+              profilePictureLink: profilePicture,
+            );
+          }).toList();
+
+      allExpenses.sort((a, b) => b.date.compareTo(a.date));
 
       final Map<String, List<Expense>> grouped = {};
       for (var expense in allExpenses) {
@@ -189,48 +196,48 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : _groupedExpenses.isEmpty
-                          ? const Center(child: Text('No expenses found'))
-                          : RefreshIndicator(
-                              onRefresh: _loadExpenses,
-                              child: ListView.builder(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                itemCount: items.length + 1,
-                                itemBuilder: (context, index) {
-                                  if (index == items.length) {
-                                    return const SizedBox(height: 100);
-                                  }
+                      ? const Center(child: Text('No expenses found'))
+                      : RefreshIndicator(
+                        onRefresh: _loadExpenses,
+                        child: ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: items.length + 1,
+                          itemBuilder: (context, index) {
+                            if (index == items.length) {
+                              return const SizedBox(height: 100);
+                            }
 
-                                  final item = items[index];
+                            final item = items[index];
 
-                                  if (item is MonthHeaderItem) {
-                                    return Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        16,
-                                        16,
-                                        16,
-                                        8,
-                                      ),
-                                      child: Text(
-                                        item.month,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    );
-                                  } else if (item is ExpenseCardItem) {
-                                    return expenseCard(
-                                      title: item.expense.title,
-                                      subtitle: item.expense.subtitle,
-                                      profilePictureLink:
-                                          item.expense.profilePictureLink,
-                                    );
-                                  }
+                            if (item is MonthHeaderItem) {
+                              return Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  16,
+                                  16,
+                                  8,
+                                ),
+                                child: Text(
+                                  item.month,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              );
+                            } else if (item is ExpenseCardItem) {
+                              return expenseCard(
+                                title: item.expense.title,
+                                subtitle: item.expense.subtitle,
+                                profilePictureLink:
+                                    item.expense.profilePictureLink,
+                              );
+                            }
 
-                                  return const SizedBox.shrink();
-                                },
-                              ),
-                            ),
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ),
                   const Center(child: Text('Summary content goes here')),
                 ],
               ),
@@ -240,7 +247,15 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
         floatingActionButton: FloatingActionButton.extended(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context).push(
+              PageRouteBuilder(
+                pageBuilder: (_, _, _) => NonGroupChooseFriendPage(),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
+              ),
+            );
+          },
           icon: const Icon(Icons.add),
           label: const Text('Add expense'),
         ),
@@ -259,7 +274,9 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
         leading: CircleAvatar(
           backgroundColor: Colors.white,
           foregroundImage:
-              profilePictureLink != null ? NetworkImage(profilePictureLink) : null,
+              profilePictureLink != null
+                  ? NetworkImage(profilePictureLink)
+                  : null,
           child: profilePictureLink == null ? const Icon(Icons.person) : null,
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:smartsplitclient/CustomWidget/friend_bar.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
 import 'package:smartsplitclient/Split/Model/guest_friend.dart';
-import 'package:smartsplitclient/Split/Presentation/split_page.dart';
+import 'package:smartsplitclient/Split/Presentation/non_group_split_page.dart';
 
 class ChooseFriendPage extends StatefulWidget {
   const ChooseFriendPage({super.key});

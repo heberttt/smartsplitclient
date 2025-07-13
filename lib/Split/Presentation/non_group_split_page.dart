@@ -7,7 +7,7 @@ import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 import 'package:smartsplitclient/Split/Presentation/manual_add_item_page.dart';
 import 'package:smartsplitclient/Split/Presentation/ocr_camera_page.dart';
-import 'package:smartsplitclient/Split/Presentation/split_result_page.dart';
+import 'package:smartsplitclient/Split/Presentation/non_group_split_result_page.dart';
 
 class SplitPage extends StatefulWidget {
   const SplitPage(this.selectedFriends, {super.key});
@@ -33,9 +33,7 @@ class _SplitPageState extends State<SplitPage> {
 
   Future<int?> _popUpExtraChargesValue(BuildContext context) async {
     final controller = TextEditingController();
-    InputDecoration decoration = InputDecoration(
-      hintText: 'Enter tax %',
-    );
+    InputDecoration decoration = InputDecoration(hintText: 'Enter tax %');
 
     return await showDialog<int>(
       context: context,
@@ -53,15 +51,57 @@ class _SplitPageState extends State<SplitPage> {
                   TextButton(
                     onPressed: () {
                       final input = int.tryParse(controller.text);
-                      if (input != null &&
-                          input >= 0) {
+                      if (input != null && input >= 0) {
                         Navigator.of(context).pop(input);
                       } else {
                         setState(() {
                           controller.text = "";
                           decoration = InputDecoration(
-                            hintText:
-                                "Tax must be more than 0%",
+                            hintText: "Tax must be more than 0%",
+                            hintStyle: TextStyle(
+                              color: Colors.red,
+                              fontSize: 10,
+                            ),
+                          );
+                        });
+                      }
+                    },
+                    child: Text('OK'),
+                  ),
+                ],
+              ),
+        );
+      },
+    );
+  }
+
+  Future<double?> _popUpRoundingAdjustmentsValue(BuildContext context) async {
+    final controller = TextEditingController();
+    InputDecoration decoration = InputDecoration(hintText: '0.10');
+
+    return await showDialog<double>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder:
+              (context, setState) => AlertDialog(
+                title: Text('Enter rounding adjustment'),
+                content: TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  decoration: decoration,
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      final input = double.tryParse(controller.text);
+                      if (input != null && input >= 0) {
+                        Navigator.of(context).pop(input);
+                      } else {
+                        setState(() {
+                          controller.text = "";
+                          decoration = InputDecoration(
+                            hintText: "Rounding adjustment must be >= 0",
                             hintStyle: TextStyle(
                               color: Colors.red,
                               fontSize: 10,
@@ -179,6 +219,54 @@ class _SplitPageState extends State<SplitPage> {
     );
   }
 
+  void _showBackConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Discard changes?"),
+          content: const Text(
+            "Are you sure you want to go back? Your current progress will be lost.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showWarningDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Warning', style: TextStyle(color: Colors.red)),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Ok'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _constructReceiptItemBars();
@@ -194,11 +282,13 @@ class _SplitPageState extends State<SplitPage> {
             toolbarHeight: 70,
             backgroundColor: Theme.of(context).primaryColor,
             leading: _getTransparentButton(Icons.arrow_back, () {
-              Navigator.pop(context);
+              _showBackConfirmationDialog(context);
             }),
             actions: [
               _getTransparentButton(Icons.close, () {
-                Navigator.of(context).popUntil((route) => route.isFirst);
+                _showBackConfirmationDialog(context);
+
+                Navigator.of(context).pop();
               }),
             ],
           ),
@@ -292,21 +382,79 @@ class _SplitPageState extends State<SplitPage> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text("Tax & Extra Charges"),
-                                  GestureDetector(onTap: () async {
-                                    final int? percent = await _popUpExtraChargesValue(context);
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final int? percent =
+                                          await _popUpExtraChargesValue(
+                                            context,
+                                          );
 
-                                    if (percent != null){
-                                      receipt.additionalChargesPercent = percent;
-                                    }
-                                  },child: Text("${receipt.additionalChargesPercent}%"))
+                                      if (percent != null) {
+                                        receipt.additionalChargesPercent =
+                                            percent;
+                                      }
+                                    },
+                                    child: Text(
+                                      "${receipt.additionalChargesPercent}%",
+                                    ),
+                                  ),
                                 ],
                               ),
-                            )
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: Theme.of(context).colorScheme.surface,
+                              width: 3,
+                            ),
+                          ),
+                        ),
+                        width: MediaQuery.sizeOf(context).width,
+                        height: 120,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("Rounding adjustments"),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final double? roundingAdjustment =
+                                          await _popUpRoundingAdjustmentsValue(
+                                            context,
+                                          );
+
+                                      if (roundingAdjustment != null) {
+                                        receipt.roundingAdjustment =
+                                            (roundingAdjustment * 100).round();
+                                      }
+                                    },
+                                    child: Text(
+                                      "RM ${receipt.roundingAdjustment / 100}",
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -325,6 +473,11 @@ class _SplitPageState extends State<SplitPage> {
                     height: 70,
                     child: ElevatedButton(
                       onPressed: () {
+                        if (receipt.receiptItems.isEmpty) {
+                          showWarningDialog("Please enter at least 1 item");
+                          return;
+                        }
+
                         receipt.title = _titleController.text;
                         receipt.friendSplits = friendSplits;
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smartsplitclient/Expense/Service/split_service.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
 import 'package:smartsplitclient/Split/Model/friend_split.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
@@ -19,6 +20,8 @@ class _SplitResultPageState extends State<SplitResultPage> {
   List<Friend> splitKeys = [];
   int overallTotal = 0;
 
+  final SplitService _splitService = SplitService();
+
   @override
   void initState() {
     super.initState();
@@ -26,7 +29,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
     splitKeys = splits.keys.toList();
   }
 
-  List<Widget> _getAllSplits(List<Friend> friend){
+  List<Widget> _getAllSplits(List<Friend> friend) {
     List<Widget> splitPerPerson = [];
 
     for (Friend f in friend) {
@@ -34,7 +37,6 @@ class _SplitResultPageState extends State<SplitResultPage> {
     }
 
     return splitPerPerson;
-
   }
 
   Widget _constructSplit(Friend f) {
@@ -45,25 +47,29 @@ class _SplitResultPageState extends State<SplitResultPage> {
     for (Map<ReceiptItem, int> receiptItemMap in receiptItemMapList) {
       List<ReceiptItem> receiptItemMapKeys = receiptItemMap.keys.toList();
       for (var receiptItemMapKey in receiptItemMapKeys) {
-        if (receiptItemMap[receiptItemMapKey]! > 0){
+        if (receiptItemMap[receiptItemMapKey]! > 0) {
           purchasedItemsDataMap.add({
-          'itemName': receiptItemMapKey.itemName,
-          'quantity': receiptItemMap[receiptItemMapKey].toString(),
-          'totalPrice':
-              ((receiptItemMapKey.totalPrice / receiptItemMapKey.quantity) * receiptItemMap[receiptItemMapKey]! / 100)
-                  .toString(),
-        });
+            'itemName': receiptItemMapKey.itemName,
+            'quantity': receiptItemMap[receiptItemMapKey].toString(),
+            'totalPrice': ((receiptItemMapKey.totalPrice /
+                        receiptItemMapKey.quantity) *
+                    receiptItemMap[receiptItemMapKey]! /
+                    100)
+                .toStringAsFixed(2),
+          });
         }
         total +=
             (receiptItemMap[receiptItemMapKey]! *
-            receiptItemMapKey.totalPrice /
-            receiptItemMapKey.quantity).floor();
+                    receiptItemMapKey.totalPrice /
+                    receiptItemMapKey.quantity)
+                .floor();
       }
     }
 
     int tax = total;
 
-    total = total + (total * widget.receipt.additionalChargesPercent / 100).floor();
+    total =
+        total + (total * widget.receipt.additionalChargesPercent / 100).floor();
 
     tax = total - tax;
 
@@ -95,7 +101,9 @@ class _SplitResultPageState extends State<SplitResultPage> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color:
-                            Theme.of(context).colorScheme.surfaceContainerHighest,
+                            Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                       ),
                       child: f.getProfilePicture(10),
                     ),
@@ -107,10 +115,13 @@ class _SplitResultPageState extends State<SplitResultPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text("${f.getName()}'s total"),
-                          Text("RM ${(total / 100)}", style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20
-                          ),),
+                          Text(
+                            "RM ${(total / 100)}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -123,7 +134,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: 4.0,
-                  horizontal: 15
+                  horizontal: 15,
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -146,32 +157,30 @@ class _SplitResultPageState extends State<SplitResultPage> {
                   ],
                 ),
               ),
-              SizedBox(height: 20,),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 4.0,
-                  horizontal: 15),
-                child: Row(
-                  children: [
-                    Expanded(flex: 2, child: Text("Extra charges")),
-                    Expanded(
-                      flex: 1,
-                      child: Text(
-                        "${widget.receipt.additionalChargesPercent}%",
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Text(
-                        "RM${tax / 100}",
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
-                  ],
-                ),
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 4.0,
+                horizontal: 15,
               ),
-              SizedBox(height: 20,)
+              child: Row(
+                children: [
+                  Expanded(flex: 2, child: Text("Extra charges")),
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      "${widget.receipt.additionalChargesPercent}%",
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                  Expanded(
+                    flex: 1,
+                    child: Text("RM${tax / 100}", textAlign: TextAlign.right),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 20),
           ],
         ),
       ),
@@ -237,10 +246,12 @@ class _SplitResultPageState extends State<SplitResultPage> {
             }),
           ],
         ),
-        body: ListView(
+        body: Stack(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            ListView(
+              padding: EdgeInsets.only(
+                bottom: 100,
+              ), // extra space for the button
               children: [
                 SizedBox(height: 40),
                 Padding(
@@ -264,43 +275,100 @@ class _SplitResultPageState extends State<SplitResultPage> {
                   ),
                 ),
                 SizedBox(height: 50),
-                Column(
-                  children: _getAllSplits(splitKeys),
-                ),
-                SizedBox(height: 50,),
+                Column(children: _getAllSplits(splitKeys)),
+                SizedBox(height: 50),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Overall total",
+                      Text(
+                        "Overall total",
                         style: TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.bold
+                          fontWeight: FontWeight.bold,
                         ),
-                        
                       ),
-                      Text("RM ${(overallTotal + widget.receipt.roundingAdjustment) / 100}")
+                      Text(
+                        "RM ${(overallTotal + widget.receipt.roundingAdjustment) / 100}",
+                      ),
                     ],
                   ),
                 ),
-                SizedBox(height: 20,),
+                SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Rounding adjustment",
-                      style: TextStyle(
-                        fontSize: 12
+                      Text(
+                        "Rounding adjustment",
+                        style: TextStyle(fontSize: 12),
                       ),
-                        
+                      Text(
+                        (widget.receipt.roundingAdjustment > 0 ? "+" : "") +
+                            (widget.receipt.roundingAdjustment / 100)
+                                .toString(),
                       ),
-                      Text((widget.receipt.roundingAdjustment > 0 ? "+" : "") + (widget.receipt.roundingAdjustment / 100).toString())
                     ],
                   ),
-                )
-                ,SizedBox(height: 80,)
+                ),
+                SizedBox(height: 80),
+              ],
+            ),
+
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 70,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                      );
+
+                      bool success = await _splitService.saveSplit(
+                        widget.receipt,
+                      );
+
+                      if (context.mounted) Navigator.of(context).pop();
+
+                      if (success) {
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(const SnackBar(content: Text("Saved")));
+
+                        int count = 0;
+                        Navigator.of(context).popUntil((_) => count++ >= 3);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Failed to save split")),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      shape: RoundedRectangleBorder(),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      'Save Split',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ],

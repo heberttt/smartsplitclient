@@ -14,7 +14,7 @@ import 'package:smartsplitclient/Home/Presentation/homepage.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:smartsplitclient/Split/Presentation/choose_friend_page.dart';
 import 'package:smartsplitclient/Split/Presentation/ocr_loading_screen.dart';
-import 'package:smartsplitclient/Split/Presentation/split_result_page.dart';
+import 'package:smartsplitclient/Split/Presentation/non_group_split_result_page.dart';
 import 'package:smartsplitclient/Theme/light_theme.dart';
 import 'package:smartsplitclient/auth_gate.dart';
 import 'firebase_options.dart';
