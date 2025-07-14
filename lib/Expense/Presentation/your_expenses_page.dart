@@ -122,8 +122,21 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                 ),
           );
 
-          final owed =
-              myMember.totalDebt / 100;
+          final double owed =
+              isDebt
+                  ? myMember.totalDebt / 100
+                  : bill.members
+                          .where((m) {
+                            final friend = m.friend;
+                            return friend is RegisteredFriend
+                                ? friend.id != currentUser.id
+                                : true;
+                          })
+                          .fold<int>(
+                            0,
+                            (sum, m) => sum + (m.hasPaid ? 0 : m.totalDebt),
+                          ) /
+                      100;
           final hasPaid = myMember.hasPaid;
 
           String? profilePicture;
@@ -148,13 +161,19 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                       const TextSpan(text: 'You owe '),
                       TextSpan(
                         text: 'RM$owed',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
                       ),
                     ] else ...[
                       const TextSpan(text: 'You paid '),
                       TextSpan(
                         text: 'RM$owed',
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
                       ),
                     ],
                   ]
@@ -164,11 +183,30 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                       text: 'RM$paid\n',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    const TextSpan(text: 'You are still owed '),
-                    TextSpan(
-                      text: 'RM$owed',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
-                    ),
+                    owed != 0
+                        ? const TextSpan(text: 'You are still owed ')
+                        : const TextSpan(
+                          text: 'All debts are ',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                    owed != 0
+                        ? TextSpan(
+                          text: 'RM$owed',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        )
+                        : TextSpan(
+                          text: 'paid',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
                   ];
 
           return Expense(
