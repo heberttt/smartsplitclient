@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -49,9 +47,6 @@ class AuthGate extends StatelessWidget {
   }
 
   Future<void> _initializeUser(BuildContext context) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final idToken = await user?.getIdToken(true);
-
     final response = await AccountService().login();
 
     if (response == null || response.statusCode != 200) {

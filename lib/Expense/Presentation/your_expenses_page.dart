@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:smartsplitclient/Authentication/Model/Account.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:smartsplitclient/Expense/Service/split_service.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
@@ -109,15 +110,21 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                   bill.receipt.roundingAdjustment) /
               100;
 
+          final myMember = bill.members.firstWhere(
+            (m) =>
+                m.friend is RegisteredFriend &&
+                (m.friend as RegisteredFriend).id == currentUser.id,
+            orElse:
+                () => FriendPayment(
+                  friend: RegisteredFriend('', '', '', ''),
+                  totalDebt: 0,
+                  hasPaid: false,
+                ),
+          );
+
           final owed =
-              bill.members
-                  .where(
-                    (m) =>
-                        m.friend is RegisteredFriend &&
-                        (m.friend as RegisteredFriend).id == currentUser.id,
-                  )
-                  .fold<int>(0, (sum, m) => sum + m.totalDebt) /
-              100;
+              myMember.totalDebt / 100;
+          final hasPaid = myMember.hasPaid;
 
           String? profilePicture;
           String? name;
@@ -137,16 +144,19 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
           final subtitleSpans =
               isDebt
                   ? [
-                    TextSpan(text: '$name paid for '),
-                    TextSpan(
-                      text: 'RM$paid\n',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(text: 'You owe '),
-                    TextSpan(
-                      text: 'RM$owed',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                    if (!hasPaid) ...[
+                      const TextSpan(text: 'You owe '),
+                      TextSpan(
+                        text: 'RM$owed',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                      ),
+                    ] else ...[
+                      const TextSpan(text: 'You paid '),
+                      TextSpan(
+                        text: 'RM$owed',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                      ),
+                    ],
                   ]
                   : [
                     const TextSpan(text: 'You paid for '),
@@ -157,7 +167,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                     const TextSpan(text: 'You are still owed '),
                     TextSpan(
                       text: 'RM$owed',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
                     ),
                   ];
 
@@ -271,37 +281,26 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     );
   }
 
-  Widget _getTransparentButton(IconData icon, VoidCallback callback) {
-    return GestureDetector(
-      onTap: callback,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Icon(
-          icon,
-          size: 35,
-          color: Theme.of(context).secondaryHeaderColor,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          toolbarHeight: 70,
-          title: const Text(
+          backgroundColor: colorScheme.primary,
+          elevation: 0,
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          title: Text(
             'Your expenses',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          backgroundColor: Theme.of(context).primaryColor,
-          leading: _getTransparentButton(Icons.arrow_back, () {
-            Navigator.pop(context);
-          }),
         ),
         body: Column(
           children: [

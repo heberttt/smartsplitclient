@@ -1,9 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:smartsplitclient/Authentication/Converter/account_converter.dart';
 import 'package:smartsplitclient/Authentication/Service/account_service.dart';
-import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Expense/Presentation/your_expenses_page.dart';
 import 'package:smartsplitclient/Friend/Presentation/friends_page.dart';
 import 'package:smartsplitclient/Group/Presentation/group_page.dart';
 import 'package:smartsplitclient/Home/Presentation/account_option_page.dart';
@@ -25,8 +24,7 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     GroupPage(),
     FriendsPage(),
-    Center(child: Text('Split', style: TextStyle(fontSize: 24))),
-    Center(child: Text('History', style: TextStyle(fontSize: 24))),
+    YourExpensesPage(),
     AccountOptionPage(),
   ];
 
@@ -81,11 +79,6 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long_outlined),
             activeIcon: Icon(Icons.receipt_long),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.timeline_outlined),
-            activeIcon: Icon(Icons.timeline),
             label: '',
           ),
           BottomNavigationBarItem(

@@ -7,6 +7,8 @@ import 'package:smartsplitclient/Authentication/Presentation/sign_up_page.dart';
 
 import 'package:smartsplitclient/Authentication/Service/account_service.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Friend/State/friend_state.dart';
+import 'package:smartsplitclient/Group/State/group_state.dart';
 import 'package:smartsplitclient/Home/Presentation/homepage.dart';
 
 class LoginPage extends StatefulWidget {
@@ -27,6 +29,20 @@ class _LoginPageState extends State<LoginPage> {
   String _loginButtonText = "Login";
   bool _isLoading = false;
 
+  Future<void> _initializeUser(BuildContext context) async {
+    final response = await AccountService().login();
+
+    if (response == null || response.statusCode != 200) {
+      throw Exception("Login failed: ${response?.body}");
+    }
+
+    final account = AccountConverter().convertFromResponse(response);
+
+    context.read<AuthState>().updateUser(account);
+    await context.read<FriendState>().getMyFriends();
+    await context.read<GroupState>().getMyGroups();
+  }
+
   Future<void> _sendResetEmail() async {
     setState(() {
       _isLoading = true;
@@ -44,6 +60,14 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = false;
       });
     }
+  }
+
+  void showLoadingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
   }
 
   Future<UserCredential?> signInWithGoogle() async {
@@ -71,52 +95,42 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _loginWithGoogle() async {
+    showLoadingDialog();
+
     UserCredential? userCredential = await signInWithGoogle();
 
     if (userCredential != null) {
       try {
         final response = await accountService.login();
+        Navigator.pop(context);
 
         if (response == null) {
           showWarningDialog("Server is unavailable. Please try again later...");
           context.read<AuthState>().logout(context);
           return;
         } else if (response.statusCode == 200 || response.statusCode == 201) {
-          //welcome back & newcomers
-          final account = accountConverter.convertFromResponse(response);
-          context.read<AuthState>().updateUser(account);
+          await _initializeUser(context);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomePage()),
           );
         } else if (response.statusCode == 401) {
           showWarningDialog("Unauthorized");
-
           context.read<AuthState>().logout(context);
           return;
         } else {
           showWarningDialog(
             "Server Error. Status code: ${response.statusCode}",
           );
-
           context.read<AuthState>().logout(context);
           return;
         }
-        // showSuccessDialog("Signed in successful. ${userCredential.user?.email}");
-
-        // final String? result = await FirebaseAuth.instance.currentUser
-        //     ?.getIdToken(true);
-
-        // final RegExp pattern = RegExp(
-        //   '.{1,800}',
-        // ); // 800 is the size of each chunk
-        // pattern
-        //     .allMatches(result!)
-        //     .forEach((RegExpMatch match) => print(match.group(0)));
       } catch (e) {
+        Navigator.pop(context);
         showWarningDialog("Sign in failed. Server is unreachable");
       }
     } else {
+      Navigator.pop(context);
       showWarningDialog("Sign in failed.");
     }
   }
@@ -124,8 +138,10 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _login() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       showWarningDialog("Please fill up your account information");
+      return;
     }
 
+    showLoadingDialog();
     setState(() {
       _loginButtonText = "Logging in....";
     });
@@ -140,46 +156,40 @@ class _LoginPageState extends State<LoginPage> {
       User? user = credential.user;
 
       if (user != null && !user.emailVerified) {
+        Navigator.pop(context);
         await FirebaseAuth.instance.signOut();
         await GoogleSignIn().signOut();
         showWarningDialog('Email not verified. Please check your inbox.');
+        return;
       }
 
       if (user != null && user.emailVerified) {
         final response = await accountService.login();
 
+        Navigator.pop(context);
+
         if (response == null) {
           showWarningDialog("Server is unavailable. Please try again later...");
           context.read<AuthState>().logout(context);
         } else if (response.statusCode == 200 || response.statusCode == 201) {
-          //welcome back & newcomers
-          final account = accountConverter.convertFromResponse(response);
-          context.read<AuthState>().updateUser(account);
+          await _initializeUser(context);
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomePage()),
           );
         } else if (response.statusCode == 401) {
           showWarningDialog("Unauthorized");
-
           context.read<AuthState>().logout(context);
         } else {
           showWarningDialog(
             "Server Error. Status code: ${response.statusCode}",
           );
-
           print(response.body);
           context.read<AuthState>().logout(context);
         }
-
-        //final String? result = await FirebaseAuth.instance.currentUser?.getIdToken(true);
-
-        // final RegExp pattern = RegExp('.{1,800}'); // 800 is the size of each chunk
-        // pattern.allMatches(result!).forEach((RegExpMatch match) =>   print(match.group(0)));
-
-        //add navigator to homepage
       }
     } on FirebaseAuthException catch (e) {
+      Navigator.pop(context);
       if (e.code == 'user-not-found') {
         showWarningDialog('No user found for that email.');
       } else if (e.code == 'wrong-password') {
@@ -190,6 +200,7 @@ class _LoginPageState extends State<LoginPage> {
         showWarningDialog('FirebaseAuthException: ${e.code} - ${e.message}');
       }
     } catch (e) {
+      Navigator.pop(context);
       showWarningDialog('Unknown error: $e');
     }
 
@@ -300,8 +311,7 @@ class _LoginPageState extends State<LoginPage> {
                     alignment: Alignment.center,
                     child: TextButton(
                       onPressed: () async {
-
-                        if (_emailController.text.isEmpty){
+                        if (_emailController.text.isEmpty) {
                           showWarningDialog("Enter your email in the textbox");
                         }
                         await _sendResetEmail();

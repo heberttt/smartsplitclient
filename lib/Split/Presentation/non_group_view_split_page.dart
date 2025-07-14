@@ -219,9 +219,22 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
             _splitBill.creatorId) {
           return Text("Paid");
         }
-        return Text(
-          "View Statement",
-          style: TextStyle(fontWeight: FontWeight.bold),
+        return Row(
+          children: [
+            Text("Paid - "),
+            GestureDetector(onTap: (){
+              Navigator.of(
+                    context,
+                  ).push<SplitBill>(
+                    PageRouteBuilder(
+                      pageBuilder:
+                          (_, __, ___) => AttachPaymentPage(_splitBill, (payment!.friend as RegisteredFriend)),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
+            }, child: Text("View Statement", style: TextStyle(color: Colors.blue))),
+          ],
         );
       } else if (payment.friend is RegisteredFriend && !payment.hasPaid) {
         if ((payment.friend as RegisteredFriend).id ==
@@ -236,7 +249,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                   ).push<SplitBill>(
                     PageRouteBuilder(
                       pageBuilder:
-                          (_, __, ___) => AttachPaymentPage(_splitBill),
+                          (_, __, ___) => AttachPaymentPage(_splitBill, (payment!.friend as RegisteredFriend)),
                       transitionDuration: Duration.zero,
                       reverseTransitionDuration: Duration.zero,
                     ),
