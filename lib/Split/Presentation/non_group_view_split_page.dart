@@ -76,8 +76,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
 
     total =
         total +
-        (total * _splitBill.receipt.additionalChargesPercent / 100)
-            .floor();
+        (total * _splitBill.receipt.additionalChargesPercent / 100).floor();
 
     tax = total - tax;
 
@@ -215,25 +214,31 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
 
     if (payment != null) {
       if (payment.friend is RegisteredFriend && payment.hasPaid) {
-        if ((payment.friend as RegisteredFriend).id ==
-            _splitBill.creatorId) {
+        if ((payment.friend as RegisteredFriend).id == _splitBill.creatorId) {
           return Text("Paid");
         }
         return Row(
           children: [
             Text("Paid - "),
-            GestureDetector(onTap: (){
-              Navigator.of(
-                    context,
-                  ).push<SplitBill>(
-                    PageRouteBuilder(
-                      pageBuilder:
-                          (_, __, ___) => AttachPaymentPage(_splitBill, (payment!.friend as RegisteredFriend)),
-                      transitionDuration: Duration.zero,
-                      reverseTransitionDuration: Duration.zero,
-                    ),
-                  );
-            }, child: Text("View Statement", style: TextStyle(color: Colors.blue))),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push<SplitBill>(
+                  PageRouteBuilder(
+                    pageBuilder:
+                        (_, __, ___) => AttachPaymentPage(
+                          _splitBill,
+                          (payment!.friend as RegisteredFriend),
+                        ),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
+              },
+              child: Text(
+                "View Statement",
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
           ],
         );
       } else if (payment.friend is RegisteredFriend && !payment.hasPaid) {
@@ -249,7 +254,10 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                   ).push<SplitBill>(
                     PageRouteBuilder(
                       pageBuilder:
-                          (_, __, ___) => AttachPaymentPage(_splitBill, (payment!.friend as RegisteredFriend)),
+                          (_, __, ___) => AttachPaymentPage(
+                            _splitBill,
+                            (payment!.friend as RegisteredFriend),
+                          ),
                       transitionDuration: Duration.zero,
                       reverseTransitionDuration: Duration.zero,
                     ),
@@ -276,7 +284,25 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
         return Row(
           children: [
             Text("Paid - "),
-            Text("View Statement", style: TextStyle(color: Colors.blue)),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push<SplitBill>(
+                  PageRouteBuilder(
+                    pageBuilder:
+                        (_, __, ___) => AttachPaymentPage(
+                          _splitBill,
+                          payment!.friend,
+                        ),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
+              },
+              child: Text(
+                "View Statement",
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
           ],
         );
       } else if (payment.friend is GuestFriend && !payment.hasPaid) {
@@ -392,9 +418,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                 children: [
                   Text("Rounding adjustment", style: TextStyle(fontSize: 12)),
                   Text(
-                    (_splitBill.receipt.roundingAdjustment > 0
-                            ? "+"
-                            : "") +
+                    (_splitBill.receipt.roundingAdjustment > 0 ? "+" : "") +
                         (_splitBill.receipt.roundingAdjustment / 100)
                             .toString(),
                   ),

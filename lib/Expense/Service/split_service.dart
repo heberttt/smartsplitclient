@@ -178,7 +178,6 @@ class SplitService {
       final data = jsonMap['data'] as List;
       final bills = data.map((e) => SplitBill.fromJson(e)).toList();
 
-      // Collect unique friend IDs
       final Set<String> accountIds = {};
       for (var bill in bills) {
         for (var member in bill.members) {
@@ -233,7 +232,6 @@ class SplitService {
         if (billJson['id'].toString() == billId) {
           final bill = SplitBill.fromJson(billJson);
 
-          // Collect friend IDs for this bill only
           final Set<String> accountIds = {};
           for (var member in bill.members) {
             if (member.friend is RegisteredFriend) {

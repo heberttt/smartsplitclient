@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Expense/Service/split_service.dart';
+import 'package:smartsplitclient/Split/Model/friend.dart';
+import 'package:smartsplitclient/Split/Model/guest_friend.dart';
 import 'package:smartsplitclient/Split/Model/payment_image.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 import 'package:smartsplitclient/Split/Service/payment_service.dart';
@@ -13,7 +15,7 @@ class AttachPaymentPage extends StatefulWidget {
   const AttachPaymentPage(this.splitBill, this.friend, {super.key});
   final SplitBill splitBill;
 
-  final RegisteredFriend friend;
+  final Friend friend;
 
   @override
   State<AttachPaymentPage> createState() => _AttachPaymentPageState();
@@ -32,16 +34,19 @@ class _AttachPaymentPageState extends State<AttachPaymentPage> {
   void initState() {
     super.initState();
 
-    final friendPayment = widget.splitBill.members.firstWhere(
-      (m) =>
-          m.friend is RegisteredFriend &&
-          (m.friend as RegisteredFriend).id == widget.friend.id,
-      orElse: () => throw Exception("Current user not found in bill members"),
-    );
+    final friendPayment = widget.splitBill.members.firstWhere((m) {
+      if (m.friend is RegisteredFriend && widget.friend is RegisteredFriend) {
+        return (m.friend as RegisteredFriend).id ==
+            (widget.friend as RegisteredFriend).id;
+      } else if (m.friend is GuestFriend && widget.friend is GuestFriend) {
+        return (m.friend as GuestFriend).name ==
+            (widget.friend as GuestFriend).name;
+      }
+      return false;
+    }, orElse: () => throw Exception("Current user not found in bill members"));
 
     _hasPaid = friendPayment.hasPaid;
     _paymentImageUrl = friendPayment.paymentImageLink;
-
   }
 
   Future<void> _pickImage() async {
@@ -177,13 +182,18 @@ class _AttachPaymentPageState extends State<AttachPaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = context.read<AuthState>().currentUser?.id;
     final myDebt = widget.splitBill.members
-        .where(
-          (m) =>
-              m.friend is RegisteredFriend &&
-              (m.friend as RegisteredFriend).id == currentUserId,
-        )
+        .where((m) {
+          if (m.friend is RegisteredFriend &&
+              widget.friend is RegisteredFriend) {
+            return (m.friend as RegisteredFriend).id ==
+                (widget.friend as RegisteredFriend).id;
+          } else if (m.friend is GuestFriend && widget.friend is GuestFriend) {
+            return (m.friend as GuestFriend).name ==
+                (widget.friend as GuestFriend).name;
+          }
+          return false;
+        })
         .fold<int>(0, (sum, m) => sum + m.totalDebt);
 
     return Scaffold(

@@ -13,7 +13,8 @@ class NonGroupChooseFriendPage extends StatefulWidget {
   const NonGroupChooseFriendPage({super.key});
 
   @override
-  State<NonGroupChooseFriendPage> createState() => _NonGroupChooseFriendPageState();
+  State<NonGroupChooseFriendPage> createState() =>
+      _NonGroupChooseFriendPageState();
 }
 
 class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
@@ -38,30 +39,63 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
 
   Future<void> showTextInputDialog(BuildContext context) async {
     TextEditingController controller = TextEditingController();
+    String? errorText;
+
     return showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Enter guest name'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: "Type something..."),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _selectedFriends.add(GuestFriend(controller.text));
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Enter guest name'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: "Type something...",
+                      errorText: errorText,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (controller.text.trim().isEmpty) {
+                      setState(() {
+                        errorText = "Name cannot be empty";
+                      });
+                      return;
+                    }
+
+                    if (_selectedFriends.any(
+                      (f) =>
+                          f is GuestFriend && f.name == controller.text.trim(),
+                    )) {
+                      setState(() {
+                        errorText = "Guest with this name already exists";
+                      });
+                      return;
+                    }
+
+                    setState(() {
+                      _selectedFriends.add(GuestFriend(controller.text.trim()));
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -75,7 +109,14 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
       });
     });
     final currentUser = context.read<AuthState>().currentUser!;
-    _selectedFriends.add(RegisteredFriend(currentUser.id, currentUser.email, currentUser.username, currentUser.profilePictureLink));
+    _selectedFriends.add(
+      RegisteredFriend(
+        currentUser.id,
+        currentUser.email,
+        currentUser.username,
+        currentUser.profilePictureLink,
+      ),
+    );
   }
 
   Widget _buildFriendListItem(RegisteredFriend friend, bool isSelected) {
@@ -105,23 +146,24 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
           isSelected
               ? const Icon(Icons.check, color: Colors.grey)
               : IconButton(
-                  icon: const Icon(Icons.add, color: Colors.green),
-                  onPressed: () {
-                    setState(() {
-                      _selectedFriends.add(friend);
-                    });
-                  },
-                ),
+                icon: const Icon(Icons.add, color: Colors.green),
+                onPressed: () {
+                  setState(() {
+                    _selectedFriends.add(friend);
+                  });
+                },
+              ),
         ],
       ),
     );
   }
 
   Widget _getFriendSelections(FriendState friendState) {
-    final filtered = friendState.myFriends.where((f) {
-      return f.username.toLowerCase().contains(_searchQuery) ||
-          f.email.toLowerCase().contains(_searchQuery);
-    }).toList();
+    final filtered =
+        friendState.myFriends.where((f) {
+          return f.username.toLowerCase().contains(_searchQuery) ||
+              f.email.toLowerCase().contains(_searchQuery);
+        }).toList();
 
     return ListView.builder(
       shrinkWrap: true,
@@ -129,7 +171,9 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final friend = filtered[index];
-        final isSelected = _selectedFriends.any((f) => f is RegisteredFriend && f.id == friend.id);
+        final isSelected = _selectedFriends.any(
+          (f) => f is RegisteredFriend && f.id == friend.id,
+        );
         return _buildFriendListItem(friend, isSelected);
       },
     );
@@ -163,7 +207,10 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
                         padding: EdgeInsets.fromLTRB(10, 30, 0, 19),
                         child: Text(
                           "Choose friends",
-                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 30),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 30,
+                          ),
                         ),
                       ),
                       const Padding(
@@ -190,7 +237,8 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                             filled: true,
-                            fillColor: Theme.of(context).colorScheme.surfaceContainer,
+                            fillColor:
+                                Theme.of(context).colorScheme.surfaceContainer,
                           ),
                         ),
                       ),
@@ -203,20 +251,35 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
                               height: 50,
                               child: ElevatedButton.icon(
                                 onPressed: () => showTextInputDialog(context),
-                                icon: const Icon(Icons.add, size: 15, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.add,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
                                 label: Text(
                                   'Add guest',
                                   style: GoogleFonts.inter(
                                     color: Colors.white,
-                                    fontSize: Theme.of(context).textTheme.titleSmall?.fontSize,
-                                    fontWeight: Theme.of(context).textTheme.titleSmall?.fontWeight,
+                                    fontSize:
+                                        Theme.of(
+                                          context,
+                                        ).textTheme.titleSmall?.fontSize,
+                                    fontWeight:
+                                        Theme.of(
+                                          context,
+                                        ).textTheme.titleSmall?.fontWeight,
                                   ),
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
                                   elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
                                   splashFactory: InkRipple.splashFactory,
                                 ),
                               ),
@@ -242,7 +305,8 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
                     onPressed: () {
                       Navigator.of(context).push(
                         PageRouteBuilder(
-                          pageBuilder: (_, __, ___) => SplitPage(_selectedFriends),
+                          pageBuilder:
+                              (_, __, ___) => SplitPage(_selectedFriends),
                           transitionDuration: Duration.zero,
                           reverseTransitionDuration: Duration.zero,
                         ),
@@ -255,7 +319,11 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
                     ),
                     child: const Text(
                       'Add',
-                      style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
