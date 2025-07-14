@@ -64,47 +64,6 @@ class _GroupPageState extends State<GroupPage> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                  PageRouteBuilder(
-                    pageBuilder: (_, _, _) => YourExpensesPage(),
-                    transitionDuration: Duration.zero,
-                    reverseTransitionDuration: Duration.zero,
-                  ),
-                );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: colorScheme.secondaryContainer,
-                          foregroundImage: const AssetImage(
-                            "assets/user-profile.png",
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Text(
-                          'Non-group expenses',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Divider(thickness: 1, color: Colors.black),
-                ),
-
                 Expanded(
                   child:
                       groupState.isLoadingGroups && groups.isEmpty
@@ -113,56 +72,84 @@ class _GroupPageState extends State<GroupPage> {
                             onRefresh: () async {
                               await groupState.getMyGroups();
                             },
-                            child: ListView.builder(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              itemCount: groups.length,
-                              itemBuilder: (context, index) {
-                                final Group group = groups[index];
-
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 12.0),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundColor:
-                                              colorScheme.secondaryContainer,
-                                          foregroundImage: const AssetImage(
-                                            "assets/groups-icon.png",
-                                          ),
-                                        ),
-                                        const SizedBox(width: 16),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              group.name,
-                                              style: theme.textTheme.bodyMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'You are owed RM20',
-                                              style: const TextStyle(
-                                                fontSize: 10,
+                            child:
+                                groups.isEmpty
+                                    ? ListView(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(),
+                                      children: const [
+                                        Padding(
+                                          padding: EdgeInsets.only(top: 50),
+                                          child: Center(
+                                            child: Text(
+                                              'You currently have no groups',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.grey,
                                               ),
                                             ),
-                                          ],
+                                          ),
                                         ),
                                       ],
+                                    )
+                                    : ListView.builder(
+                                      physics:
+                                          const AlwaysScrollableScrollPhysics(),
+                                      itemCount: groups.length,
+                                      itemBuilder: (context, index) {
+                                        final Group group = groups[index];
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 12.0,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  backgroundColor:
+                                                      colorScheme
+                                                          .secondaryContainer,
+                                                  foregroundImage:
+                                                      const AssetImage(
+                                                        "assets/groups-icon.png",
+                                                      ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      group.name,
+                                                      style: theme
+                                                          .textTheme
+                                                          .bodyMedium
+                                                          ?.copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    const Text(
+                                                      'You are owed RM20',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
                           ),
                 ),
               ],

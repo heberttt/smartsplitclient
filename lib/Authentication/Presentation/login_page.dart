@@ -313,6 +313,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () async {
                         if (_emailController.text.isEmpty) {
                           showWarningDialog("Enter your email in the textbox");
+                          return;
                         }
                         await _sendResetEmail();
                       },

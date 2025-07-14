@@ -316,28 +316,28 @@ class _FriendsPageState extends State<FriendsPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final friendState = Provider.of<FriendState>(context);
-    return SafeArea(
-      child: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          FocusManager.instance.primaryFocus?.unfocus();
-        },
-        child: Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          appBar: AppBar(
-          backgroundColor: colorScheme.primary,
-          elevation: 0,
-          centerTitle: true,
-          automaticallyImplyLeading: false,
-          title: Text(
-            'Friends',
-            style: theme.textTheme.titleLarge?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(
+        backgroundColor: colorScheme.primary,
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title: Text(
+          'Friends',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
-          body: Column(
+      ),
+        body: SafeArea(
+          child: Column(
             children: [
               const Padding(
                 padding: EdgeInsets.all(12.0),
@@ -432,9 +432,9 @@ class _FriendsPageState extends State<FriendsPage> {
                               final email = _emailController.text.trim();
                               if (email.isNotEmpty) {
                                 print("Sending friend request to $email");
-
+              
                                 await _sendRequest(email);
-
+              
                                 _emailController.clear();
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -464,7 +464,7 @@ class _FriendsPageState extends State<FriendsPage> {
                           friendState.isLoadingFriendRequests) {
                         return const Center(child: CircularProgressIndicator());
                       }
-
+              
                       return RefreshIndicator(
                         onRefresh: () async {
                           if (_selectedTab == 0) {
@@ -479,7 +479,7 @@ class _FriendsPageState extends State<FriendsPage> {
                                 _selectedTab == 0
                                     ? friendState.myFriends.isEmpty
                                     : friendState.myFriendRequests.isEmpty;
-
+              
                             if (isEmpty) {
                               return ListView(
                                 physics: const AlwaysScrollableScrollPhysics(),
@@ -501,7 +501,7 @@ class _FriendsPageState extends State<FriendsPage> {
                                 ],
                               );
                             }
-
+              
                             return ListView.builder(
                               physics: const AlwaysScrollableScrollPhysics(),
                               itemCount:
