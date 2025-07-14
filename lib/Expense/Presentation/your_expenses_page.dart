@@ -65,8 +65,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
   Future<void> _loadExpenses() async {
     try {
       final currentUser = context.read<AuthState>().currentUser!;
-      final friends = context.read<FriendState>().myFriends;
-      final bills = await _splitService.getMySplitBills(friends, currentUser);
+      final bills = await _splitService.getMySplitBills(currentUser);
 
       final grouped = _groupExpensesOrDebts(bills, currentUser, isDebt: false);
 
@@ -83,8 +82,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
   Future<void> _loadDebts() async {
     try {
       final currentUser = context.read<AuthState>().currentUser!;
-      final friends = context.read<FriendState>().myFriends;
-      final bills = await _splitService.getMyDebts(friends, currentUser);
+      final bills = await _splitService.getMyDebts(currentUser);
 
       final grouped = _groupExpensesOrDebts(bills, currentUser, isDebt: true);
 

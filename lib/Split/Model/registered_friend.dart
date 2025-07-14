@@ -36,4 +36,13 @@ class RegisteredFriend extends Friend{
 
   @override
   int get hashCode => id.hashCode;
+
+  factory RegisteredFriend.fromJson(Map<String, dynamic> json) {
+    return RegisteredFriend(
+      json['id'],
+      json['email'],
+      json['username'],
+      json['profilePictureLink'],
+    );
+  }
 }

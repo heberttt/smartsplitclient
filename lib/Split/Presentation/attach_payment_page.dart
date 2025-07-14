@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Expense/Service/split_service.dart';
-import 'package:smartsplitclient/Friend/State/friend_state.dart';
 import 'package:smartsplitclient/Split/Model/payment_image.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 import 'package:smartsplitclient/Split/Service/payment_service.dart';
@@ -97,7 +96,6 @@ class _AttachPaymentPageState extends State<AttachPaymentPage> {
     if (success) {
       final updatedBill = await _splitService.getDebtByBillId(
         widget.splitBill.id.toString(),
-        context.read<FriendState>().myFriends,
         context.read<AuthState>().currentUser,
       );
 

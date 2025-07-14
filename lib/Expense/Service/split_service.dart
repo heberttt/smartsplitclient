@@ -6,6 +6,7 @@ import 'package:smartsplitclient/Constants/backend_url.dart';
 import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:http/http.dart' as http;
+import 'package:smartsplitclient/Friend/Service/friend_service.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
 import 'package:smartsplitclient/Split/Model/friend_split.dart';
 import 'package:smartsplitclient/Split/Model/guest_friend.dart';
@@ -14,6 +15,8 @@ import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 
 class SplitService {
+  final FriendService _friendService = FriendService();
+
   Future<bool> saveSplit(Receipt receipt) async {
     final user = FirebaseAuth.instance.currentUser;
     final idToken = await user?.getIdToken(true);
@@ -60,33 +63,28 @@ class SplitService {
     return response.statusCode == 200;
   }
 
-  SplitBill enrichSplitBill(SplitBill bill, List<RegisteredFriend> myFriends, Account? currentUser) {
+  Future<SplitBill> enrichSplitBill(
+    SplitBill bill,
+    Account? currentUser,
+    Map<String, RegisteredFriend> friendMap,
+  ) async {
     Friend enrichFriend(Friend friend) {
       if (friend is RegisteredFriend) {
-
         if (currentUser != null && friend.id == currentUser.id) {
-        return RegisteredFriend(
-          currentUser.id,
-          currentUser.email,
-          currentUser.username,
-          currentUser.profilePictureLink,
-        );
+          return RegisteredFriend(
+            currentUser.id,
+            currentUser.email,
+            currentUser.username,
+            currentUser.profilePictureLink,
+          );
+        }
+
+        final fetched = friendMap[friend.id];
+        if (fetched != null) {
+          return fetched;
+        }
       }
 
-
-        final match = myFriends.firstWhere(
-          (f) => f.id == friend.id,
-          orElse: () => friend,
-        );
-
-        
-        return RegisteredFriend(
-          match.id,
-          match.email,
-          match.username,
-          match.profilePictureLink,
-        );
-      }
       return friend;
     }
 
@@ -114,10 +112,7 @@ class SplitService {
     return bill;
   }
 
-  Future<List<SplitBill>> getMySplitBills(
-    List<RegisteredFriend> myFriends,
-    Account? currentUser
-  ) async {
+  Future<List<SplitBill>> getMySplitBills(Account? currentUser) async {
     final user = FirebaseAuth.instance.currentUser;
     final idToken = await user?.getIdToken(true);
 
@@ -132,20 +127,92 @@ class SplitService {
     if (response.statusCode == 200) {
       final jsonMap = jsonDecode(response.body);
       final data = jsonMap['data'] as List;
+      final bills = data.map((e) => SplitBill.fromJson(e)).toList();
 
-      return data
-          .map((e) => SplitBill.fromJson(e))
-          .map((bill) => enrichSplitBill(bill, myFriends, currentUser))
-          .toList();
+      final Set<String> accountIds = {};
+
+      for (var bill in bills) {
+        for (var member in bill.members) {
+          if (member.friend is RegisteredFriend) {
+            accountIds.add((member.friend as RegisteredFriend).id);
+          }
+        }
+        for (var splits in bill.receipt.friendSplits) {
+          for (var split in splits) {
+            if (split.friend is RegisteredFriend) {
+              accountIds.add((split.friend as RegisteredFriend).id);
+            }
+          }
+        }
+      }
+
+      final fetchedFriends = await _friendService.getAccounts(
+        accountIds.toList(),
+      );
+      final friendMap = {for (var f in fetchedFriends) f.id: f};
+
+      final enriched = await Future.wait(
+        bills.map((b) => enrichSplitBill(b, currentUser, friendMap)),
+      );
+
+      return enriched;
     } else {
       throw Exception('Failed to load split bills: ${response.statusCode}');
     }
   }
 
+  Future<List<SplitBill>> getMyDebts(Account? currentUser) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final idToken = await user?.getIdToken(true);
 
-  Future<List<SplitBill>> getMyDebts(
-    List<RegisteredFriend> myFriends,
-    Account? currentUser
+    final response = await http.get(
+      Uri.parse(BackendUrl.DEBT_SERVICE),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final jsonMap = jsonDecode(response.body);
+      final data = jsonMap['data'] as List;
+      final bills = data.map((e) => SplitBill.fromJson(e)).toList();
+
+      // Collect unique friend IDs
+      final Set<String> accountIds = {};
+      for (var bill in bills) {
+        for (var member in bill.members) {
+          if (member.friend is RegisteredFriend) {
+            accountIds.add((member.friend as RegisteredFriend).id);
+          }
+        }
+        for (var splits in bill.receipt.friendSplits) {
+          for (var split in splits) {
+            if (split.friend is RegisteredFriend) {
+              accountIds.add((split.friend as RegisteredFriend).id);
+            }
+          }
+        }
+      }
+
+      final fetchedFriends = await _friendService.getAccounts(
+        accountIds.toList(),
+      );
+      final friendMap = {for (var f in fetchedFriends) f.id: f};
+
+      final enriched = await Future.wait(
+        bills.map((b) => enrichSplitBill(b, currentUser, friendMap)),
+      );
+
+      return enriched;
+    } else {
+      throw Exception('Failed to load debts: ${response.statusCode}');
+    }
+  }
+
+  Future<SplitBill?> getDebtByBillId(
+    String billId,
+    Account? currentUser,
   ) async {
     final user = FirebaseAuth.instance.currentUser;
     final idToken = await user?.getIdToken(true);
@@ -162,48 +229,37 @@ class SplitService {
       final jsonMap = jsonDecode(response.body);
       final data = jsonMap['data'] as List;
 
-      return data
-          .map((e) => SplitBill.fromJson(e))
-          .map((bill) => enrichSplitBill(bill, myFriends, currentUser))
-          .toList();
-    } else {
-      throw Exception('Failed to load split bills: ${response.statusCode}');
-    }
-  }
+      for (var billJson in data) {
+        if (billJson['id'].toString() == billId) {
+          final bill = SplitBill.fromJson(billJson);
 
-  Future<SplitBill?> getDebtByBillId(
-  String billId,
-  List<RegisteredFriend> myFriends,
-  Account? currentUser,
-) async {
-  final user = FirebaseAuth.instance.currentUser;
-  final idToken = await user?.getIdToken(true);
+          // Collect friend IDs for this bill only
+          final Set<String> accountIds = {};
+          for (var member in bill.members) {
+            if (member.friend is RegisteredFriend) {
+              accountIds.add((member.friend as RegisteredFriend).id);
+            }
+          }
+          for (var splits in bill.receipt.friendSplits) {
+            for (var split in splits) {
+              if (split.friend is RegisteredFriend) {
+                accountIds.add((split.friend as RegisteredFriend).id);
+              }
+            }
+          }
 
-  final response = await http.get(
-    Uri.parse(BackendUrl.DEBT_SERVICE),
-    headers: {
-      'Authorization': 'Bearer $idToken',
-      'Content-Type': 'application/json',
-    },
-  );
+          final fetchedFriends = await _friendService.getAccounts(
+            accountIds.toList(),
+          );
+          final friendMap = {for (var f in fetchedFriends) f.id: f};
 
-  if (response.statusCode == 200) {
-    final jsonMap = jsonDecode(response.body);
-    final data = jsonMap['data'] as List;
-
-    for (var billJson in data) {
-      if (billJson['id'].toString() == billId) {
-        final bill = SplitBill.fromJson(billJson);
-        return enrichSplitBill(bill, myFriends, currentUser);
+          return await enrichSplitBill(bill, currentUser, friendMap);
+        }
       }
+
+      return null;
+    } else {
+      throw Exception('Failed to load debt bills: ${response.statusCode}');
     }
-
-    return null;
-  } else {
-    throw Exception('Failed to load debt bills: ${response.statusCode}');
   }
-}
-
-
-
 }

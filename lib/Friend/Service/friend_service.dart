@@ -7,8 +7,7 @@ import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 import 'package:http/http.dart' as http;
 
 class FriendService {
-
-  Future<bool> sendFriendRequest(String email) async{
+  Future<bool> sendFriendRequest(String email) async {
     final user = FirebaseAuth.instance.currentUser;
     final idToken = await user?.getIdToken(true);
 
@@ -18,9 +17,7 @@ class FriendService {
         'Authorization': 'Bearer $idToken',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        "targetEmail" : email
-      })
+      body: jsonEncode({"targetEmail": email}),
     );
 
     if (response.statusCode == 200) {
@@ -40,18 +37,17 @@ class FriendService {
         'Authorization': 'Bearer $idToken',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        "targetId" : requestId
-      })
+      body: jsonEncode({"targetId": requestId}),
     );
 
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception('Failed to accept friend request: ${response.statusCode}');
+      throw Exception(
+        'Failed to accept friend request: ${response.statusCode}',
+      );
     }
   }
-
 
   Future<bool> rejectFriendRequest(int requestId) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -63,20 +59,17 @@ class FriendService {
         'Authorization': 'Bearer $idToken',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        "friendRequestID" : requestId
-      })
+      body: jsonEncode({"friendRequestID": requestId}),
     );
 
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception('Failed to reject friend request: ${response.statusCode}');
+      throw Exception(
+        'Failed to reject friend request: ${response.statusCode}',
+      );
     }
-
   }
-
-
 
   Future<List<FriendRequest>> getMyFriendRequests() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -101,7 +94,7 @@ class FriendService {
           user['email'],
           user['username'],
           user['profilePictureLink'],
-          int.parse(entry.key)
+          int.parse(entry.key),
         );
       }).toList();
     } else {
@@ -163,5 +156,50 @@ class FriendService {
       json['username'],
       json['profilePictureLink'],
     );
+  }
+
+  Future<RegisteredFriend> getAccount(String accountId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final idToken = await user?.getIdToken(true);
+
+    final response = await http.get(
+      Uri.parse("${BackendUrl.ACCOUNT_SERVICE_URL}?id=$accountId"),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> json = jsonDecode(response.body);
+      final data = json['data'];
+
+      return RegisteredFriend.fromJson(data);
+    } else {
+      throw Exception('Failed to fetch friend: ${response.statusCode}');
+    }
+  }
+
+  Future<List<RegisteredFriend>> getAccounts(List<String> accountIds) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final idToken = await user?.getIdToken(true);
+
+    final response = await http.post(
+      Uri.parse(BackendUrl.ACCOUNT_SERVICE_URL),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({"accountIds": accountIds}),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> json = jsonDecode(response.body);
+
+      final List<dynamic> data = json['data'];
+      return data.map((item) => RegisteredFriend.fromJson(item)).toList();
+    } else {
+      throw Exception('Failed to fetch accounts: ${response.statusCode}');
+    }
   }
 }

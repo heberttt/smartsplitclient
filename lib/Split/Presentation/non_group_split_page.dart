@@ -398,8 +398,10 @@ class _SplitPageState extends State<SplitPage> {
                                           );
 
                                       if (percent != null) {
-                                        receipt.additionalChargesPercent =
+                                        setState(() {
+                                          receipt.additionalChargesPercent =
                                             percent;
+                                        });
                                       }
                                     },
                                     child: Text(
