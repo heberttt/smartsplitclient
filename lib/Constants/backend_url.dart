@@ -17,4 +17,6 @@ class BackendUrl {
   static const String GROUP_SERVICE = "$GATEWAY_URL/groups";
 
   static const String SPLIT_SERVICE = "$GATEWAY_URL/splits";
+
+  static const String DEBT_SERVICE = "$GATEWAY_URL/debts";
 }

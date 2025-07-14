@@ -10,6 +10,7 @@ import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:intl/intl.dart';
 import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
+import 'package:smartsplitclient/Split/Presentation/attach_payment_page.dart';
 
 class NonGroupViewSplitPage extends StatefulWidget {
   const NonGroupViewSplitPage(this.splitBill, {super.key});
@@ -21,6 +22,7 @@ class NonGroupViewSplitPage extends StatefulWidget {
 }
 
 class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
+  late SplitBill _splitBill;
   Map<Friend, List<Map<ReceiptItem, int>>> splits = {};
   List<Friend> splitKeys = [];
   int overallTotal = 0;
@@ -28,7 +30,8 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
   @override
   void initState() {
     super.initState();
-    _generateSplits(widget.splitBill.receipt);
+    _splitBill = widget.splitBill;
+    _generateSplits(_splitBill.receipt);
     splitKeys = splits.keys.toList();
   }
 
@@ -73,7 +76,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
 
     total =
         total +
-        (total * widget.splitBill.receipt.additionalChargesPercent / 100)
+        (total * _splitBill.receipt.additionalChargesPercent / 100)
             .floor();
 
     tax = total - tax;
@@ -175,7 +178,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                   Expanded(
                     flex: 1,
                     child: Text(
-                      "${widget.splitBill.receipt.additionalChargesPercent}%",
+                      "${_splitBill.receipt.additionalChargesPercent}%",
                       textAlign: TextAlign.right,
                     ),
                   ),
@@ -197,35 +200,79 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
     FriendPayment? payment;
 
     if (targetFriend is RegisteredFriend) {
-      payment = widget.splitBill.members.firstWhere(
+      payment = _splitBill.members.firstWhere(
         (p) =>
             p.friend is RegisteredFriend &&
             (p.friend as RegisteredFriend).id == targetFriend.id,
       );
     } else if (targetFriend is GuestFriend) {
-      payment = widget.splitBill.members.firstWhere(
+      payment = _splitBill.members.firstWhere(
         (p) =>
             p.friend is GuestFriend &&
             (p.friend as GuestFriend).getName() == targetFriend.getName(),
       );
     }
 
+    if (payment != null) {
+      if (payment.friend is RegisteredFriend && payment.hasPaid) {
+        if ((payment.friend as RegisteredFriend).id ==
+            _splitBill.creatorId) {
+          return Text("Paid");
+        }
+        return Text(
+          "View Statement",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        );
+      } else if (payment.friend is RegisteredFriend && !payment.hasPaid) {
+        if ((payment.friend as RegisteredFriend).id ==
+            context.read<AuthState>().currentUser!.id) {
+          return Row(
+            children: [
+              Text("Unpaid - "),
+              GestureDetector(
+                onTap: () async {
+                  final updatedBill = await Navigator.of(
+                    context,
+                  ).push<SplitBill>(
+                    PageRouteBuilder(
+                      pageBuilder:
+                          (_, __, ___) => AttachPaymentPage(_splitBill),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
 
-    if (payment != null){
-      if (payment.friend is RegisteredFriend && payment.hasPaid){
-        return Text("Paid");
-      }
-      else if (payment.friend is RegisteredFriend && !payment.hasPaid){
-        if ((payment.friend as RegisteredFriend).id == context.read<AuthState>().currentUser!.id){
-          return Text("Currentuser unpaid");
+                  if (updatedBill != null) {
+                    setState(() {
+                      _splitBill = updatedBill;
+                      _generateSplits(updatedBill.receipt);
+                      splitKeys = splits.keys.toList();
+                    });
+                  }
+                },
+                child: Text(
+                  "Attach Payment",
+                  style: TextStyle(color: Colors.blue),
+                ),
+              ),
+            ],
+          );
         }
         return Text("Unpaid");
-      }
-      else if (payment.friend is GuestFriend && payment.hasPaid){
-        return Text("Guest paid");
-      }
-      else if (payment.friend is GuestFriend && !payment.hasPaid){
-        return Text("Guest unpaid");
+      } else if (payment.friend is GuestFriend && payment.hasPaid) {
+        return Row(
+          children: [
+            Text("Paid - "),
+            Text("View Statement", style: TextStyle(color: Colors.blue)),
+          ],
+        );
+      } else if (payment.friend is GuestFriend && !payment.hasPaid) {
+        return Row(
+          children: [
+            Text("Unpaid - "),
+            Text("Copy link", style: TextStyle(color: Colors.blue)),
+          ],
+        );
       }
     }
 
@@ -285,11 +332,6 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
           leading: _getTransparentButton(Icons.arrow_back, () {
             Navigator.pop(context);
           }),
-          actions: [
-            _getTransparentButton(Icons.close, () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
-            }),
-          ],
         ),
         body: ListView(
           children: [
@@ -300,13 +342,13 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.splitBill.receipt.title,
+                    _splitBill.receipt.title,
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
                   ),
                   Text(
                     DateFormat(
                       'yyyy-MM-dd HH:mm:ss',
-                    ).format(widget.splitBill.receipt.now),
+                    ).format(_splitBill.receipt.now),
                   ),
                 ],
               ),
@@ -324,7 +366,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    "RM ${(overallTotal + widget.splitBill.receipt.roundingAdjustment) / 100}",
+                    "RM ${(overallTotal + _splitBill.receipt.roundingAdjustment) / 100}",
                   ),
                 ],
               ),
@@ -337,10 +379,10 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                 children: [
                   Text("Rounding adjustment", style: TextStyle(fontSize: 12)),
                   Text(
-                    (widget.splitBill.receipt.roundingAdjustment > 0
+                    (_splitBill.receipt.roundingAdjustment > 0
                             ? "+"
                             : "") +
-                        (widget.splitBill.receipt.roundingAdjustment / 100)
+                        (_splitBill.receipt.roundingAdjustment / 100)
                             .toString(),
                   ),
                 ],

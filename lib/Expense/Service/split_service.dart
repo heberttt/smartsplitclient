@@ -141,4 +141,69 @@ class SplitService {
       throw Exception('Failed to load split bills: ${response.statusCode}');
     }
   }
+
+
+  Future<List<SplitBill>> getMyDebts(
+    List<RegisteredFriend> myFriends,
+    Account? currentUser
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final idToken = await user?.getIdToken(true);
+
+    final response = await http.get(
+      Uri.parse(BackendUrl.DEBT_SERVICE),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final jsonMap = jsonDecode(response.body);
+      final data = jsonMap['data'] as List;
+
+      return data
+          .map((e) => SplitBill.fromJson(e))
+          .map((bill) => enrichSplitBill(bill, myFriends, currentUser))
+          .toList();
+    } else {
+      throw Exception('Failed to load split bills: ${response.statusCode}');
+    }
+  }
+
+  Future<SplitBill?> getDebtByBillId(
+  String billId,
+  List<RegisteredFriend> myFriends,
+  Account? currentUser,
+) async {
+  final user = FirebaseAuth.instance.currentUser;
+  final idToken = await user?.getIdToken(true);
+
+  final response = await http.get(
+    Uri.parse(BackendUrl.DEBT_SERVICE),
+    headers: {
+      'Authorization': 'Bearer $idToken',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final jsonMap = jsonDecode(response.body);
+    final data = jsonMap['data'] as List;
+
+    for (var billJson in data) {
+      if (billJson['id'].toString() == billId) {
+        final bill = SplitBill.fromJson(billJson);
+        return enrichSplitBill(bill, myFriends, currentUser);
+      }
+    }
+
+    return null;
+  } else {
+    throw Exception('Failed to load debt bills: ${response.statusCode}');
+  }
+}
+
+
+
 }

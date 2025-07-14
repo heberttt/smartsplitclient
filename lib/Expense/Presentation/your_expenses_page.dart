@@ -24,14 +24,14 @@ class ExpenseCardItem extends ExpenseListItem {
 
 class Expense {
   final String title;
-  final String subtitle;
   final DateTime date;
   final String? profilePictureLink;
   final SplitBill splitBill;
+  final List<InlineSpan> subtitleSpans;
 
   Expense({
     required this.title,
-    required this.subtitle,
+    required this.subtitleSpans,
     required this.date,
     required this.profilePictureLink,
     required this.splitBill,
@@ -40,7 +40,6 @@ class Expense {
 
 class YourExpensesPage extends StatefulWidget {
   const YourExpensesPage({super.key});
-
   @override
   State<YourExpensesPage> createState() => _YourExpensesPageState();
 }
@@ -48,78 +47,27 @@ class YourExpensesPage extends StatefulWidget {
 class _YourExpensesPageState extends State<YourExpensesPage> {
   final SplitService _splitService = SplitService();
   Map<String, List<Expense>> _groupedExpenses = {};
+  Map<String, List<Expense>> _groupedDebts = {};
   bool _isLoading = true;
+  bool _isLoadingDebts = true;
 
   @override
   void initState() {
     super.initState();
-    _loadExpenses();
+    _loadAllData();
   }
 
-  List<ExpenseListItem> _flattenedExpenseItems() {
-    final List<ExpenseListItem> items = [];
-
-    _groupedExpenses.forEach((month, expenses) {
-      items.add(MonthHeaderItem(month));
-      items.addAll(expenses.map((e) => ExpenseCardItem(e)));
-    });
-
-    return items;
+  Future<void> _loadAllData() async {
+    await Future.wait([_loadExpenses(), _loadDebts()]);
   }
 
   Future<void> _loadExpenses() async {
     try {
-      final friendState = context.read<FriendState>();
-      final friends = friendState.myFriends;
-      Account? currentUser = context.read<AuthState>().currentUser;
-      List<SplitBill> bills = await _splitService.getMySplitBills(
-        context.read<FriendState>().myFriends,
-        context.read<AuthState>().currentUser,
-      );
+      final currentUser = context.read<AuthState>().currentUser!;
+      final friends = context.read<FriendState>().myFriends;
+      final bills = await _splitService.getMySplitBills(friends, currentUser);
 
-      List<Expense> allExpenses =
-          bills.map((bill) {
-            final paid = (bill.members
-                    .fold<int>(0, (sum, m) => sum + m.totalDebt) + bill.receipt.roundingAdjustment) /
-                100 ;
-
-            final owed =
-                bill.members
-                    .where((m) => !m.hasPaid)
-                    .fold<int>(0, (sum, m) => sum + m.totalDebt) /
-                100;
-
-            String? profilePicture;
-
-            if (currentUser != null && currentUser.id == bill.creatorId) {
-              profilePicture = currentUser.profilePictureLink;
-            } else {
-              final creator = friends.firstWhere(
-                (f) => f.id == bill.creatorId,
-                orElse: () => RegisteredFriend('', '', '', ''),
-              );
-              if (creator.id.isNotEmpty) {
-                profilePicture = creator.profilePictureLink;
-              }
-            }
-
-            return Expense(
-              title: bill.receipt.title,
-              subtitle:
-                  'You paid for RM$paid\nYou are still owed RM$owed',
-              date: bill.receipt.now,
-              profilePictureLink: profilePicture,
-              splitBill: bill,
-            );
-          }).toList();
-
-      allExpenses.sort((a, b) => b.date.compareTo(a.date));
-
-      final Map<String, List<Expense>> grouped = {};
-      for (var expense in allExpenses) {
-        final key = DateFormat('MMMM yyyy').format(expense.date);
-        grouped.putIfAbsent(key, () => []).add(expense);
-      }
+      final grouped = _groupExpensesOrDebts(bills, currentUser, isDebt: false);
 
       setState(() {
         _groupedExpenses = grouped;
@@ -127,10 +75,200 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
       });
     } catch (e) {
       debugPrint('Failed to load expenses: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _loadDebts() async {
+    try {
+      final currentUser = context.read<AuthState>().currentUser!;
+      final friends = context.read<FriendState>().myFriends;
+      final bills = await _splitService.getMyDebts(friends, currentUser);
+
+      final grouped = _groupExpensesOrDebts(bills, currentUser, isDebt: true);
+
+      setState(() {
+        _groupedDebts = grouped;
+        _isLoadingDebts = false;
+      });
+    } catch (e) {
+      debugPrint('Failed to load debts: $e');
+      setState(() => _isLoadingDebts = false);
+    }
+  }
+
+  Map<String, List<Expense>> _groupExpensesOrDebts(
+    List<SplitBill> bills,
+    Account currentUser, {
+    required bool isDebt,
+  }) {
+    final List<Expense> all =
+        bills.map((bill) {
+          final paid =
+              (bill.members.fold<int>(0, (sum, m) => sum + m.totalDebt) +
+                  bill.receipt.roundingAdjustment) /
+              100;
+
+          final owed =
+              bill.members
+                  .where(
+                    (m) =>
+                        m.friend is RegisteredFriend &&
+                        (m.friend as RegisteredFriend).id == currentUser.id,
+                  )
+                  .fold<int>(0, (sum, m) => sum + m.totalDebt) /
+              100;
+
+          String? profilePicture;
+          String? name;
+
+          if (currentUser.id == bill.creatorId) {
+            profilePicture = currentUser.profilePictureLink;
+            name = currentUser.username;
+          } else {
+            final creator = context.read<FriendState>().myFriends.firstWhere(
+              (f) => f.id == bill.creatorId,
+              orElse: () => RegisteredFriend('', '', '', ''),
+            );
+            profilePicture = creator.profilePictureLink;
+            name = creator.username;
+          }
+
+          final subtitleSpans =
+              isDebt
+                  ? [
+                    TextSpan(text: '$name paid for '),
+                    TextSpan(
+                      text: 'RM$paid\n',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(text: 'You owe '),
+                    TextSpan(
+                      text: 'RM$owed',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ]
+                  : [
+                    const TextSpan(text: 'You paid for '),
+                    TextSpan(
+                      text: 'RM$paid\n',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const TextSpan(text: 'You are still owed '),
+                    TextSpan(
+                      text: 'RM$owed',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ];
+
+          return Expense(
+            title: bill.receipt.title,
+            subtitleSpans: subtitleSpans,
+            date: bill.receipt.now,
+            profilePictureLink: profilePicture,
+            splitBill: bill,
+          );
+        }).toList();
+
+    all.sort((a, b) => b.date.compareTo(a.date));
+
+    final Map<String, List<Expense>> grouped = {};
+    for (final expense in all) {
+      final key = DateFormat('MMMM yyyy').format(expense.date);
+      grouped.putIfAbsent(key, () => []).add(expense);
+    }
+
+    return grouped;
+  }
+
+  List<ExpenseListItem> _flattenedItems(Map<String, List<Expense>> grouped) {
+    final List<ExpenseListItem> items = [];
+
+    grouped.forEach((month, expenses) {
+      items.add(MonthHeaderItem(month));
+      items.addAll(expenses.map((e) => ExpenseCardItem(e)));
+    });
+
+    return items;
+  }
+
+  Widget _buildExpenseList({
+    required bool isLoading,
+    required Map<String, List<Expense>> grouped,
+    required Future<void> Function() onRefresh,
+  }) {
+    final items = _flattenedItems(grouped);
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (grouped.isEmpty) {
+      return const Center(child: Text('No data found'));
+    } else {
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: items.length + 1,
+          itemBuilder: (context, index) {
+            if (index == items.length) return const SizedBox(height: 100);
+            final item = items[index];
+
+            if (item is MonthHeaderItem) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  item.month,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            } else if (item is ExpenseCardItem) {
+              return _expenseCard(item.expense);
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
+      );
+    }
+  }
+
+  Widget _expenseCard(Expense expense) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: ListTile(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => NonGroupViewSplitPage(expense.splitBill),
+            ),
+          );
+        },
+        leading: CircleAvatar(
+          backgroundColor: Colors.white,
+          foregroundImage:
+              expense.profilePictureLink != null
+                  ? NetworkImage(expense.profilePictureLink!)
+                  : null,
+          child:
+              expense.profilePictureLink == null
+                  ? const Icon(Icons.person)
+                  : null,
+        ),
+        title: Text(
+          expense.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: RichText(
+          text: TextSpan(
+            style: const TextStyle(color: Colors.black),
+            children: expense.subtitleSpans,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _getTransparentButton(IconData icon, VoidCallback callback) {
@@ -150,8 +288,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final items = _flattenedExpenseItems();
-
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -192,68 +328,22 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                 unselectedLabelColor: Colors.black54,
                 indicatorColor: Colors.black,
                 indicatorWeight: 2.5,
-                tabs: [Tab(text: 'Expenses'), Tab(text: 'Summary')],
+                tabs: [Tab(text: 'Expenses'), Tab(text: 'Debts')],
               ),
             ),
             Expanded(
               child: TabBarView(
                 children: [
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _groupedExpenses.isEmpty
-                      ? const Center(child: Text('No expenses found'))
-                      : RefreshIndicator(
-                        onRefresh: _loadExpenses,
-                        child: ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: items.length + 1,
-                          itemBuilder: (context, index) {
-                            if (index == items.length) {
-                              return const SizedBox(height: 100);
-                            }
-
-                            final item = items[index];
-
-                            if (item is MonthHeaderItem) {
-                              return Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  16,
-                                  16,
-                                  8,
-                                ),
-                                child: Text(
-                                  item.month,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              );
-                            } else if (item is ExpenseCardItem) {
-                              return expenseCard(
-                                title: item.expense.title,
-                                subtitle: item.expense.subtitle,
-                                profilePictureLink:
-                                    item.expense.profilePictureLink,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder:
-                                          (_) => NonGroupViewSplitPage(
-                                            item.expense.splitBill,
-                                          ),
-                                    ),
-                                  );
-                                },
-                              );
-                            }
-
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      ),
-                  const Center(child: Text('Summary content goes here')),
+                  _buildExpenseList(
+                    isLoading: _isLoading,
+                    grouped: _groupedExpenses,
+                    onRefresh: _loadExpenses,
+                  ),
+                  _buildExpenseList(
+                    isLoading: _isLoadingDebts,
+                    grouped: _groupedDebts,
+                    onRefresh: _loadDebts,
+                  ),
                 ],
               ),
             ),
@@ -273,33 +363,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
           },
           icon: const Icon(Icons.add),
           label: const Text('Add expense'),
-        ),
-      ),
-    );
-  }
-
-  Widget expenseCard({
-    required String title,
-    required String subtitle,
-    required String? profilePictureLink,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: ListTile(
-        onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: Colors.white,
-          foregroundImage:
-              profilePictureLink != null
-                  ? NetworkImage(profilePictureLink)
-                  : null,
-          child: profilePictureLink == null ? const Icon(Icons.person) : null,
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(fontWeight: FontWeight.w500),
         ),
       ),
     );

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:smartsplitclient/Split/Model/receipt_image.dart';
 import 'package:smartsplitclient/Split/Repository/receipt_image_repository.dart';
@@ -55,7 +57,7 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
         .replaceAll(" ", "_")
         .replaceAll(":", "-")
         .replaceAll(".", "-");
-    String id = "guest_$now";
+    String id = "${context.read<AuthState>().currentUser!.id}_$now";
 
     final bool isUploaded = await _uploadImage(
       id,

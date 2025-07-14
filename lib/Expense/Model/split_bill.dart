@@ -7,19 +7,20 @@ import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 
 class SplitBill {
+  final int id;
   final String creatorId;
   final Receipt receipt;
   final List<FriendPayment> members;
 
   SplitBill({
+    required this.id,
     required this.creatorId,
     required this.receipt,
     required this.members,
   });
 
-  
-
   factory SplitBill.fromJson(Map<String, dynamic> json) {
+    final int id = json['id'];
     final receiptJson = json['receipt'];
     final creatorId = json['creatorId'];
     final membersJson = json['members'];
@@ -88,6 +89,11 @@ class SplitBill {
       );
     }
 
-    return SplitBill(creatorId: creatorId, receipt: receipt, members: members);
+    return SplitBill(
+      id: id,
+      creatorId: creatorId,
+      receipt: receipt,
+      members: members,
+    );
   }
 }
