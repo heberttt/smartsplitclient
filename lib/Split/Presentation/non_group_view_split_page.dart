@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
@@ -43,6 +44,11 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
     }
 
     return splitPerPerson;
+  }
+
+  String _truncateName(String name, int maxLength) {
+    if (name.length <= maxLength) return name;
+    return '${name.substring(0, maxLength - 1)}…';
   }
 
   Widget _constructSplit(Friend f) {
@@ -121,13 +127,24 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("${f.getName()}'s total"),
+                          if (f is GuestFriend)
+                            Opacity(
+                              opacity: 0.4,
+                              child: Text(
+                                "(Guest)",
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
                           Text(
                             "RM ${(total / 100)}",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 20,
                             ),
+                          ),
+                          Text(
+                            "${_truncateName(f.getName(), 18)}'s total",
+                            maxLines: 1,
                           ),
                           _getPaymentAction(f),
                         ],
@@ -215,7 +232,10 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
     if (payment != null) {
       if (payment.friend is RegisteredFriend && payment.hasPaid) {
         if ((payment.friend as RegisteredFriend).id == _splitBill.creatorId) {
-          return Text("Paid");
+          return Text(
+            "Paid",
+            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+          );
         }
         return Row(
           children: [
@@ -279,7 +299,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
             ],
           );
         }
-        return Text("Unpaid");
+        return Text("Unpaid", style: TextStyle(color: Colors.red));
       } else if (payment.friend is GuestFriend && payment.hasPaid) {
         return Row(
           children: [
@@ -289,10 +309,8 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                 Navigator.of(context).push<SplitBill>(
                   PageRouteBuilder(
                     pageBuilder:
-                        (_, __, ___) => AttachPaymentPage(
-                          _splitBill,
-                          payment!.friend,
-                        ),
+                        (_, __, ___) =>
+                            AttachPaymentPage(_splitBill, payment!.friend),
                     transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
                   ),
@@ -306,12 +324,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
           ],
         );
       } else if (payment.friend is GuestFriend && !payment.hasPaid) {
-        return Row(
-          children: [
-            Text("Unpaid - "),
-            Text("Copy link", style: TextStyle(color: Colors.blue)),
-          ],
-        );
+        return Text("Unpaid", style: TextStyle(color: Colors.red));
       }
     }
 
@@ -360,6 +373,13 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
     );
   }
 
+  void _shareBillLink(String token) {
+    final String link = 'https://smartsplit.com/bill/$token';
+    SharePlus.instance.share(
+      ShareParams(text: 'Check out our split bill! $link'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     overallTotal = 0;
@@ -371,6 +391,9 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
           leading: _getTransparentButton(Icons.arrow_back, () {
             Navigator.pop(context);
           }),
+          actions: [_getTransparentButton(Icons.share, () {
+            _shareBillLink(widget.splitBill.publicAccessToken);
+          })],
         ),
         body: ListView(
           children: [

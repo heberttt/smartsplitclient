@@ -11,12 +11,14 @@ class SplitBill {
   final String creatorId;
   final Receipt receipt;
   final List<FriendPayment> members;
+  final String publicAccessToken;
 
   SplitBill({
     required this.id,
     required this.creatorId,
     required this.receipt,
     required this.members,
+    required this.publicAccessToken,
   });
 
   factory SplitBill.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,7 @@ class SplitBill {
     final receiptJson = json['receipt'];
     final creatorId = json['creatorId'];
     final membersJson = json['members'];
+    final publicAccessToken = json['publicAccessToken'] ?? '';
 
     String title = receiptJson['name'] ?? "Untitled Split";
     int additionalCharges = receiptJson['additionalChargesPercent'] ?? 0;
@@ -94,6 +97,8 @@ class SplitBill {
       creatorId: creatorId,
       receipt: receipt,
       members: members,
+      publicAccessToken: publicAccessToken,
     );
   }
 }
+
