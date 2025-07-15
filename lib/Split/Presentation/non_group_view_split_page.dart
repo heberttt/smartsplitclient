@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
+import 'package:smartsplitclient/Constants/backend_url.dart';
 import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
@@ -239,7 +240,14 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
         }
         return Row(
           children: [
-            Text("Paid - "),
+            Text(
+              "Paid",
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(" - "),
             GestureDetector(
               onTap: () {
                 Navigator.of(context).push<SplitBill>(
@@ -266,7 +274,14 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
             context.read<AuthState>().currentUser!.id) {
           return Row(
             children: [
-              Text("Unpaid - "),
+              Text(
+                "Unpaid",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(" - "),
               GestureDetector(
                 onTap: () async {
                   final updatedBill = await Navigator.of(
@@ -303,7 +318,14 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
       } else if (payment.friend is GuestFriend && payment.hasPaid) {
         return Row(
           children: [
-            Text("Paid - "),
+            Text(
+              "Paid",
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(" - "),
             GestureDetector(
               onTap: () {
                 Navigator.of(context).push<SplitBill>(
@@ -373,8 +395,9 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
     );
   }
 
-  void _shareBillLink(String token) {
-    final String link = 'https://smartsplit.com/bill/$token';
+  void _shareBillLink(String token, int billId) {
+    final String link =
+        '${BackendUrl.GATEWAY_URL}/splitview/?billId=$billId&token=$token';
     SharePlus.instance.share(
       ShareParams(text: 'Check out our split bill! $link'),
     );
@@ -391,9 +414,14 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
           leading: _getTransparentButton(Icons.arrow_back, () {
             Navigator.pop(context);
           }),
-          actions: [_getTransparentButton(Icons.share, () {
-            _shareBillLink(widget.splitBill.publicAccessToken);
-          })],
+          actions: [
+            _getTransparentButton(Icons.share, () {
+              _shareBillLink(
+                widget.splitBill.publicAccessToken,
+                widget.splitBill.id,
+              );
+            }),
+          ],
         ),
         body: ListView(
           children: [
