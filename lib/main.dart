@@ -15,6 +15,7 @@ import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:smartsplitclient/Split/Presentation/choose_friend_page.dart';
 import 'package:smartsplitclient/Split/Presentation/ocr_loading_screen.dart';
 import 'package:smartsplitclient/Split/Presentation/non_group_split_result_page.dart';
+import 'package:smartsplitclient/Split/State/split_state.dart';
 import 'package:smartsplitclient/Theme/light_theme.dart';
 import 'package:smartsplitclient/auth_gate.dart';
 import 'firebase_options.dart';
@@ -29,6 +30,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthState()),
+        ChangeNotifierProvider(create: (context) => SplitState()),
         ChangeNotifierProvider(create: (context) => FriendState()..getMyFriends()),
         ChangeNotifierProvider(create: (context) => GroupState()..getMyGroups()),
       ],

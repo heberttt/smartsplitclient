@@ -10,6 +10,7 @@ import 'package:smartsplitclient/Friend/State/friend_state.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 import 'package:smartsplitclient/Split/Presentation/non_group_choose_friend_page.dart';
 import 'package:smartsplitclient/Split/Presentation/non_group_view_split_page.dart';
+import 'package:smartsplitclient/Split/State/split_state.dart';
 
 abstract class ExpenseListItem {}
 
@@ -47,52 +48,15 @@ class YourExpensesPage extends StatefulWidget {
 
 class _YourExpensesPageState extends State<YourExpensesPage> {
   final SplitService _splitService = SplitService();
-  Map<String, List<Expense>> _groupedExpenses = {};
-  Map<String, List<Expense>> _groupedDebts = {};
-  bool _isLoading = true;
-  bool _isLoadingDebts = true;
 
   @override
   void initState() {
     super.initState();
-    _loadAllData();
-  }
-
-  Future<void> _loadAllData() async {
-    await Future.wait([_loadExpenses(), _loadDebts()]);
-  }
-
-  Future<void> _loadExpenses() async {
-    try {
-      final currentUser = context.read<AuthState>().currentUser!;
-      final bills = await _splitService.getMySplitBills(currentUser);
-
-      final grouped = _groupExpensesOrDebts(bills, currentUser, isDebt: false);
-
-      setState(() {
-        _groupedExpenses = grouped;
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Failed to load expenses: $e');
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _loadDebts() async {
-    try {
-      final currentUser = context.read<AuthState>().currentUser!;
-      final bills = await _splitService.getMyDebts(currentUser);
-
-      final grouped = _groupExpensesOrDebts(bills, currentUser, isDebt: true);
-
-      setState(() {
-        _groupedDebts = grouped;
-        _isLoadingDebts = false;
-      });
-    } catch (e) {
-      debugPrint('Failed to load debts: $e');
-      setState(() => _isLoadingDebts = false);
+    final user = context.read<AuthState>().currentUser;
+    if (user != null &&
+        context.read<SplitState>().myDebts.isEmpty &&
+        context.read<SplitState>().mySplitBills.isEmpty) {
+      context.read<SplitState>().loadAllData(user);
     }
   }
 
@@ -247,38 +211,46 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
 
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
-    } else if (grouped.isEmpty) {
-      return const Center(child: Text('No data found'));
-    } else {
-      return RefreshIndicator(
-        onRefresh: onRefresh,
-        child: ListView.builder(
-          physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: items.length + 1,
-          itemBuilder: (context, index) {
-            if (index == items.length) return const SizedBox(height: 100);
-            final item = items[index];
-
-            if (item is MonthHeaderItem) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  item.month,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              );
-            } else if (item is ExpenseCardItem) {
-              return _expenseCard(item.expense);
-            }
-
-            return const SizedBox.shrink();
-          },
-        ),
-      );
     }
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child:
+          grouped.isEmpty
+              ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 200),
+                  Center(child: Text('No data found')),
+                  SizedBox(height: 500),
+                ],
+              )
+              : ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: items.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == items.length) return const SizedBox(height: 100);
+                  final item = items[index];
+
+                  if (item is MonthHeaderItem) {
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Text(
+                        item.month,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    );
+                  } else if (item is ExpenseCardItem) {
+                    return _expenseCard(item.expense);
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+    );
   }
 
   Widget _expenseCard(Expense expense) {
@@ -320,7 +292,20 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final splitState = context.watch<SplitState>();
+    final user = context.read<AuthState>().currentUser!;
     final colorScheme = theme.colorScheme;
+    final groupedExpenses = _groupExpensesOrDebts(
+      splitState.mySplitBills.values.expand((e) => e).toList(),
+      user,
+      isDebt: false,
+    );
+    final groupedDebts = _groupExpensesOrDebts(
+      splitState.myDebts.values.expand((e) => e).toList(),
+      user,
+      isDebt: true,
+    );
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -370,14 +355,14 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
               child: TabBarView(
                 children: [
                   _buildExpenseList(
-                    isLoading: _isLoading,
-                    grouped: _groupedExpenses,
-                    onRefresh: _loadExpenses,
+                    isLoading: splitState.isLoadingBills,
+                    grouped: groupedExpenses,
+                    onRefresh: () => splitState.loadExpenses(user),
                   ),
                   _buildExpenseList(
-                    isLoading: _isLoadingDebts,
-                    grouped: _groupedDebts,
-                    onRefresh: _loadDebts,
+                    isLoading: splitState.isLoadingDebts,
+                    grouped: groupedDebts,
+                    onRefresh: () => splitState.loadDebts(user),
                   ),
                 ],
               ),

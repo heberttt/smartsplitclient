@@ -37,67 +37,66 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
     );
   }
 
-  Future<void> showTextInputDialog(BuildContext context) async {
-    TextEditingController controller = TextEditingController();
-    String? errorText;
+  void _onAddGuestPressed() async {
+  final guestName = await showTextInputDialog(context, _selectedFriends);
+  if (guestName != null) {
+    setState(() {
+      _selectedFriends.add(GuestFriend(guestName));
+    });
+  }
+}
 
-    return showDialog<void>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Enter guest name'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      hintText: "Type something...",
-                      errorText: errorText,
-                    ),
+  Future<String?> showTextInputDialog(BuildContext context, List<Friend> existingFriends) async {
+  TextEditingController controller = TextEditingController();
+  String? errorText;
+
+  return showDialog<String>(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Enter guest name'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: "Type something...",
+                    errorText: errorText,
                   ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    if (controller.text.trim().isEmpty) {
-                      setState(() {
-                        errorText = "Name cannot be empty";
-                      });
-                      return;
-                    }
-
-                    if (_selectedFriends.any(
-                      (f) =>
-                          f is GuestFriend && f.name == controller.text.trim(),
-                    )) {
-                      setState(() {
-                        errorText = "Guest with this name already exists";
-                      });
-                      return;
-                    }
-
-                    setState(() {
-                      _selectedFriends.add(GuestFriend(controller.text.trim()));
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: const Text('OK'),
                 ),
               ],
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  final trimmed = controller.text.trim();
+                  if (trimmed.isEmpty) {
+                    setState(() => errorText = "Name cannot be empty");
+                    return;
+                  }
+                  if (existingFriends.any((f) => f is GuestFriend && f.name == trimmed)) {
+                    setState(() => errorText = "Guest with this name already exists");
+                    return;
+                  }
+
+                  Navigator.pop(context, trimmed);
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
 
   @override
   void initState() {
@@ -250,7 +249,7 @@ class _NonGroupChooseFriendPageState extends State<NonGroupChooseFriendPage> {
                               width: MediaQuery.sizeOf(context).width * 0.9,
                               height: 50,
                               child: ElevatedButton.icon(
-                                onPressed: () => showTextInputDialog(context),
+                                onPressed: _onAddGuestPressed,
                                 icon: const Icon(
                                   Icons.add,
                                   size: 15,

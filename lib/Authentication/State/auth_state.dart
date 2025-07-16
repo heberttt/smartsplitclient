@@ -5,7 +5,7 @@ import 'package:smartsplitclient/Authentication/Model/Account.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
 import 'package:smartsplitclient/Group/State/group_state.dart';
 import 'package:provider/provider.dart';
-
+import 'package:smartsplitclient/Split/State/split_state.dart';
 
 class AuthState with ChangeNotifier {
   Account? currentUser;
@@ -18,7 +18,7 @@ class AuthState with ChangeNotifier {
 
     context.read<FriendState>().clear();
     context.read<GroupState>().clear();
-
+    context.read<SplitState>().clear();
 
     notifyListeners();
   }
@@ -26,7 +26,8 @@ class AuthState with ChangeNotifier {
   void updateUser(Account account) {
     currentUser = account;
 
-    if (currentUser != null) {
+    if (currentUser != null &&
+        !currentUser!.profilePictureLink.contains("googleusercontent.com")) {
       currentUser!.profilePictureLink =
           "${currentUser!.profilePictureLink}&t=${DateTime.now().millisecondsSinceEpoch}";
     }
