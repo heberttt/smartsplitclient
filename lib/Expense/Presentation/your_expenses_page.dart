@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -5,8 +6,8 @@ import 'package:smartsplitclient/Authentication/Model/Account.dart';
 import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
-import 'package:smartsplitclient/Expense/Service/split_service.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
+import 'package:smartsplitclient/Split/Model/guest_friend.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 import 'package:smartsplitclient/Split/Presentation/non_group_choose_friend_page.dart';
 import 'package:smartsplitclient/Split/Presentation/non_group_view_split_page.dart';
@@ -47,8 +48,6 @@ class YourExpensesPage extends StatefulWidget {
 }
 
 class _YourExpensesPageState extends State<YourExpensesPage> {
-  final SplitService _splitService = SplitService();
-
   @override
   void initState() {
     super.initState();
@@ -102,18 +101,15 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
           final hasPaid = myMember.hasPaid;
 
           String? profilePicture;
-          String? name;
 
           if (currentUser.id == bill.creatorId) {
             profilePicture = currentUser.profilePictureLink;
-            name = currentUser.username;
           } else {
             final creator = context.read<FriendState>().myFriends.firstWhere(
               (f) => f.id == bill.creatorId,
               orElse: () => RegisteredFriend('', '', '', ''),
             );
             profilePicture = creator.profilePictureLink;
-            name = creator.username;
           }
 
           final subtitleSpans =
@@ -202,56 +198,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     return items;
   }
 
-  Widget _buildExpenseList({
-    required bool isLoading,
-    required Map<String, List<Expense>> grouped,
-    required Future<void> Function() onRefresh,
-  }) {
-    final items = _flattenedItems(grouped);
-
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child:
-          grouped.isEmpty
-              ? ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                children: const [
-                  SizedBox(height: 200),
-                  Center(child: Text('No data found')),
-                  SizedBox(height: 500),
-                ],
-              )
-              : ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: items.length + 1,
-                itemBuilder: (context, index) {
-                  if (index == items.length) return const SizedBox(height: 100);
-                  final item = items[index];
-
-                  if (item is MonthHeaderItem) {
-                    return Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text(
-                        item.month,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    );
-                  } else if (item is ExpenseCardItem) {
-                    return _expenseCard(item.expense);
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              ),
-    );
-  }
 
   Widget _expenseCard(Expense expense) {
     return Card(
@@ -285,6 +231,257 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
             children: expense.subtitleSpans,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildExpensesAnalyticsChart(List<SplitBill> bills, Account user) {
+    final currentYear = DateTime.now().year;
+    final Map<int, double> paidPerMonth = {};
+    final Map<int, double> owedPerMonth = {};
+
+    for (int i = 1; i <= 12; i++) {
+      paidPerMonth[i] = 0;
+      owedPerMonth[i] = 0;
+    }
+
+    for (var bill in bills) {
+      final month = bill.receipt.now.month;
+      final year = bill.receipt.now.year;
+      if (year != currentYear || bill.creatorId != user.id) continue;
+
+      final totalPaid =
+          (bill.members.fold<int>(0, (sum, m) => sum + m.totalDebt) +
+              bill.receipt.roundingAdjustment) /
+          100;
+
+      final othersOwe =
+          bill.members
+              .where((m) {
+                final f = m.friend;
+                return (f is RegisteredFriend && f.id != user.id) ||
+                    f is GuestFriend;
+              })
+              .fold<int>(0, (sum, m) => sum + (m.hasPaid ? 0 : m.totalDebt)) /
+          100;
+
+      paidPerMonth[month] = paidPerMonth[month]! + totalPaid;
+      owedPerMonth[month] = owedPerMonth[month]! + othersOwe;
+    }
+
+    
+
+    return _buildBarChart(
+      paidPerMonth,
+      owedPerMonth,
+      Colors.green,
+      Colors.red,
+      'Total Paid',
+      'Still Owed',
+    );
+  }
+
+  Widget _buildDebtsAnalyticsChart(List<SplitBill> debts, Account user) {
+    final currentYear = DateTime.now().year;
+    final Map<int, double> paidPerMonth = {};
+    final Map<int, double> owedPerMonth = {};
+
+    for (int i = 1; i <= 12; i++) {
+      paidPerMonth[i] = 0;
+      owedPerMonth[i] = 0;
+    }
+
+    for (var debt in debts) {
+      final month = debt.receipt.now.month;
+      final year = debt.receipt.now.year;
+      if (year != currentYear) continue;
+
+      final myMember = debt.members.firstWhere(
+        (m) =>
+            m.friend is RegisteredFriend &&
+            (m.friend as RegisteredFriend).id == user.id,
+        orElse:
+            () => FriendPayment(
+              friend: RegisteredFriend('', '', '', ''),
+              totalDebt: 0,
+              hasPaid: false,
+            ),
+      );
+
+      owedPerMonth[month] = owedPerMonth[month]! + (myMember.totalDebt / 100);
+      if (myMember.hasPaid) {
+        paidPerMonth[month] = paidPerMonth[month]! + (myMember.totalDebt / 100);
+      }
+    }
+
+
+
+    return _buildBarChart(
+      owedPerMonth,
+      paidPerMonth,
+      Colors.red,
+      Colors.green,
+      'You Owed',
+      'You Paid',
+    );
+  }
+
+  Widget _buildBarChart(
+    Map<int, double> bar1,
+    Map<int, double> bar2,
+    Color color1,
+    Color color2,
+    String label1,
+    String label2,
+  ) {
+    final rawMax = [
+      ...bar1.values,
+      ...bar2.values,
+    ].fold<double>(0, (prev, x) => x > prev ? x : prev);
+    final maxY = ((rawMax / 10).ceil() * 10).toDouble();
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 250,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxY,
+              barTouchData: BarTouchData(enabled: false),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: true, reservedSize: 40),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      const months = [
+                        'J',
+                        'F',
+                        'M',
+                        'A',
+                        'M',
+                        'J',
+                        'J',
+                        'A',
+                        'S',
+                        'O',
+                        'N',
+                        'D',
+                      ];
+                      return Text(
+                        value >= 1 && value <= 12
+                            ? months[value.toInt() - 1]
+                            : '',
+                      );
+                    },
+                  ),
+                ),
+                topTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+              ),
+              gridData: FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              barGroups: List.generate(12, (index) {
+                final month = index + 1;
+                return BarChartGroupData(
+                  x: month,
+                  barRods: [
+                    BarChartRodData(
+                      toY: bar1[month]!,
+                      color: color1,
+                      width: 8,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    BarChartRodData(
+                      toY: bar2[month]!,
+                      color: color2,
+                      width: 8,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ],
+                  barsSpace: 6,
+                );
+              }),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildLegendItem(color1, label1),
+            const SizedBox(width: 20),
+            _buildLegendItem(color2, label2),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(label),
+      ],
+    );
+  }
+
+  Widget _buildScrollableTabContent(
+    Map<String, List<Expense>> grouped,
+    bool isLoading,
+    Future<void> Function() onRefresh,
+    SplitState splitState,
+    Account user, {
+    required Widget graphWidget,
+  }) {
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Text("Spending in ${DateTime.now().year}"),
+          ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: graphWidget,
+          ),
+          const SizedBox(height: 20),
+          ..._flattenedItems(grouped).map((item) {
+            if (item is MonthHeaderItem) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text(
+                  item.month,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            } else if (item is ExpenseCardItem) {
+              return _expenseCard(item.expense);
+            }
+            return const SizedBox.shrink();
+          }).toList(),
+          const SizedBox(height: 100),
+        ],
       ),
     );
   }
@@ -325,22 +522,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
         ),
         body: Column(
           children: [
-            const SizedBox(height: 10),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              height: 200,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black45),
-                color: Colors.grey[400],
-              ),
-              child: const Center(
-                child: Text(
-                  'Analytics Placeholder',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: TabBar(
@@ -354,15 +535,27 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
             Expanded(
               child: TabBarView(
                 children: [
-                  _buildExpenseList(
-                    isLoading: splitState.isLoadingBills,
-                    grouped: groupedExpenses,
-                    onRefresh: () => splitState.loadExpenses(user),
+                  _buildScrollableTabContent(
+                    groupedExpenses,
+                    splitState.isLoadingBills,
+                    () => splitState.loadExpenses(user),
+                    splitState,
+                    user,
+                    graphWidget: _buildExpensesAnalyticsChart(
+                      splitState.mySplitBills.values.expand((e) => e).toList(),
+                      user,
+                    ),
                   ),
-                  _buildExpenseList(
-                    isLoading: splitState.isLoadingDebts,
-                    grouped: groupedDebts,
-                    onRefresh: () => splitState.loadDebts(user),
+                  _buildScrollableTabContent(
+                    groupedDebts,
+                    splitState.isLoadingDebts,
+                    () => splitState.loadDebts(user),
+                    splitState,
+                    user,
+                    graphWidget: _buildDebtsAnalyticsChart(
+                      splitState.myDebts.values.expand((e) => e).toList(),
+                      user,
+                    ),
                   ),
                 ],
               ),
