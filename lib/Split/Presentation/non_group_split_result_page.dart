@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smartsplitclient/Expense/Service/split_service.dart';
+import 'package:smartsplitclient/Group/Model/group.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
 import 'package:smartsplitclient/Split/Model/friend_split.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
@@ -7,8 +8,9 @@ import 'package:intl/intl.dart';
 import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 
 class SplitResultPage extends StatefulWidget {
-  const SplitResultPage(this.receipt, {super.key});
+  const SplitResultPage(this.receipt, {this.group, super.key});
 
+  final Group? group;
   final Receipt receipt;
 
   @override
@@ -335,8 +337,10 @@ class _SplitResultPageState extends State<SplitResultPage> {
                         },
                       );
 
+
                       bool success = await _splitService.saveSplit(
                         widget.receipt,
+                        group: widget.group
                       );
 
                       if (context.mounted) Navigator.of(context).pop();

@@ -7,9 +7,11 @@ import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
+import 'package:smartsplitclient/Group/Model/group.dart';
+import 'package:smartsplitclient/Group/Presentation/group_choose_friend_page.dart';
+import 'package:smartsplitclient/Group/State/group_state.dart';
 import 'package:smartsplitclient/Split/Model/guest_friend.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
-import 'package:smartsplitclient/Split/Presentation/non_group_choose_friend_page.dart';
 import 'package:smartsplitclient/Split/Presentation/non_group_view_split_page.dart';
 import 'package:smartsplitclient/Split/State/split_state.dart';
 
@@ -41,13 +43,16 @@ class Expense {
   });
 }
 
-class YourExpensesPage extends StatefulWidget {
-  const YourExpensesPage({super.key});
+class GroupExpensesPage extends StatefulWidget {
+  const GroupExpensesPage(this.group, {super.key});
+
+  final Group group;
+
   @override
-  State<YourExpensesPage> createState() => _YourExpensesPageState();
+  State<GroupExpensesPage> createState() => _GroupExpensesPageState();
 }
 
-class _YourExpensesPageState extends State<YourExpensesPage> {
+class _GroupExpensesPageState extends State<GroupExpensesPage> {
   @override
   void initState() {
     super.initState();
@@ -198,7 +203,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     return items;
   }
 
-
   Widget _expenseCard(Expense expense) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -269,8 +273,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
       owedPerMonth[month] = owedPerMonth[month]! + othersOwe;
     }
 
-    
-
     return _buildBarChart(
       paidPerMonth,
       owedPerMonth,
@@ -313,8 +315,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
         paidPerMonth[month] = paidPerMonth[month]! + (myMember.totalDebt / 100);
       }
     }
-
-
 
     return _buildBarChart(
       owedPerMonth,
@@ -449,7 +449,20 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
   }) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      child: ListView(
+      child: grouped.isEmpty
+    ? ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          SizedBox(height: 100),
+          Center(
+            child: Text(
+              'No data',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ),
+        ],
+      )
+    : ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           const SizedBox(height: 20),
@@ -479,37 +492,111 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
               return _expenseCard(item.expense);
             }
             return const SizedBox.shrink();
-          }).toList(),
+          }),
           const SizedBox(height: 100),
         ],
       ),
+
     );
   }
 
+  Widget _buildMemberTabContent() {
+  final group = widget.group;
+  final members = group.members;
+
+  return RefreshIndicator(
+    onRefresh: () async {
+      await context.read<GroupState>().getMyGroups();
+      setState(() {});
+    },
+    child: members.isEmpty
+        ? ListView(
+            children: const [
+              SizedBox(height: 100),
+              Center(
+                child: Text(
+                  'No members in this group.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ),
+            ],
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.only(top: 12, bottom: 100),
+            itemCount: members.length,
+            itemBuilder: (context, index) {
+              final member = members[index];
+
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.grey.shade300,
+                      foregroundImage: member.profilePictureLink.isNotEmpty
+                          ? NetworkImage(member.profilePictureLink)
+                          : null,
+                      child: member.profilePictureLink.isEmpty
+                          ? const Icon(Icons.person, color: Colors.white)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(member.username,
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500)),
+                          Text(
+                            member.email,
+                            style:
+                                const TextStyle(fontSize: 10, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+  );
+}
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final splitState = context.watch<SplitState>();
     final user = context.read<AuthState>().currentUser!;
     final colorScheme = theme.colorScheme;
+    final groupId = widget.group.id.toString();
+
     final groupedExpenses = _groupExpensesOrDebts(
-  splitState.mySplitBills.values
-      .expand((e) => e)
-      .where((bill) => bill.groupId.isEmpty)
-      .toList(),
-  user,
-  isDebt: false,
-);
+      splitState.mySplitBills.values
+          .expand((e) => e)
+          .where((bill) => bill.groupId == groupId)
+          .toList(),
+      user,
+      isDebt: false,
+    );
 
     final groupedDebts = _groupExpensesOrDebts(
-      splitState.myDebts.values.expand((e) => e).where((bill) => bill.groupId.isEmpty)
-      .toList(),
+      splitState.myDebts.values
+          .expand((e) => e)
+          .where((bill) => bill.groupId == groupId)
+          .toList(),
       user,
       isDebt: true,
     );
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
@@ -517,8 +604,16 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
           elevation: 0,
           centerTitle: true,
           automaticallyImplyLeading: false,
+          leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          behavior: HitTestBehavior.opaque,
+          child: const Padding(
+            padding: EdgeInsets.all(10),
+            child: Icon(Icons.arrow_back, size: 35, color: Colors.white),
+          ),
+        ),
           title: Text(
-            'Your expenses',
+            'Group expenses',
             style: theme.textTheme.titleLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -534,7 +629,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                 unselectedLabelColor: Colors.black54,
                 indicatorColor: Colors.black,
                 indicatorWeight: 2.5,
-                tabs: [Tab(text: 'Expenses'), Tab(text: 'Debts')],
+                tabs: [Tab(text: 'Expenses'), Tab(text: 'Debts'), Tab(text: 'Members',)],
               ),
             ),
             Expanded(
@@ -547,12 +642,12 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                     splitState,
                     user,
                     graphWidget: _buildExpensesAnalyticsChart(
-  splitState.mySplitBills.values
-      .expand((e) => e)
-      .where((bill) => bill.groupId.isEmpty)
-      .toList(),
-  user,
-),
+                      splitState.mySplitBills.values
+                          .expand((e) => e)
+                          .where((bill) => bill.groupId == groupId)
+                          .toList(),
+                      user,
+                    ),
                   ),
                   _buildScrollableTabContent(
                     groupedDebts,
@@ -561,10 +656,14 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                     splitState,
                     user,
                     graphWidget: _buildDebtsAnalyticsChart(
-                      splitState.myDebts.values.expand((e) => e).where((bill) => bill.groupId.isEmpty).toList(),
+                      splitState.myDebts.values
+                          .expand((e) => e)
+                          .where((bill) => bill.groupId == groupId)
+                          .toList(),
                       user,
                     ),
                   ),
+                  _buildMemberTabContent()
                 ],
               ),
             ),
@@ -576,7 +675,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
           onPressed: () {
             Navigator.of(context).push(
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => NonGroupChooseFriendPage(),
+                pageBuilder: (_, __, ___) => GroupChooseFriendPage(widget.group),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),

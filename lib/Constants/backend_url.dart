@@ -2,7 +2,7 @@
  
 
 class BackendUrl {
-  static const String GATEWAY_URL = "http://192.168.100.61:8080";
+  static const String GATEWAY_URL = "http://10.0.2.2:8080";
 
   static const String OCR_SERVICE_URL = "$GATEWAY_URL/ocr/scan";
 

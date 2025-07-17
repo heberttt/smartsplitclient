@@ -7,6 +7,7 @@ import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:http/http.dart' as http;
 import 'package:smartsplitclient/Friend/Service/friend_service.dart';
+import 'package:smartsplitclient/Group/Model/group.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
 import 'package:smartsplitclient/Split/Model/friend_split.dart';
 import 'package:smartsplitclient/Split/Model/guest_friend.dart';
@@ -17,10 +18,11 @@ import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 class SplitService {
   final FriendService _friendService = FriendService();
 
-  Future<bool> saveSplit(Receipt receipt) async {
+  Future<bool> saveSplit(Receipt receipt, {Group? group}) async {
     final user = FirebaseAuth.instance.currentUser;
     final idToken = await user?.getIdToken(true);
     final payload = {
+      "groupId": group?.id,
       "receipt": {
         "name": receipt.title,
         "additionalChargesPercent": receipt.additionalChargesPercent,

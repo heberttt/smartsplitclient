@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smartsplitclient/CustomWidget/receipt_item_bar.dart';
 import 'package:smartsplitclient/CustomWidget/selectable_friend_bar.dart';
+import 'package:smartsplitclient/Group/Model/group.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
 import 'package:smartsplitclient/Split/Model/friend_split.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
@@ -10,8 +11,9 @@ import 'package:smartsplitclient/Split/Presentation/ocr_camera_page.dart';
 import 'package:smartsplitclient/Split/Presentation/non_group_split_result_page.dart';
 
 class SplitPage extends StatefulWidget {
-  const SplitPage(this.selectedFriends, {super.key});
+  const SplitPage(this.selectedFriends, {this.group, super.key});
 
+  final Group? group;
   final List<Friend> selectedFriends;
 
   @override
@@ -485,7 +487,7 @@ class _SplitPageState extends State<SplitPage> {
 
                         Navigator.of(context).push(
                           PageRouteBuilder(
-                            pageBuilder: (_, _, _) => SplitResultPage(receipt),
+                            pageBuilder: (_, _, _) => SplitResultPage(group: widget.group, receipt),
                             transitionDuration: Duration.zero,
                             reverseTransitionDuration: Duration.zero,
                           ),

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:smartsplitclient/Expense/Presentation/your_expenses_page.dart';
 import 'package:smartsplitclient/Group/Model/group.dart';
 import 'package:smartsplitclient/Group/Presentation/choose_group_members.dart';
+import 'package:smartsplitclient/Group/Presentation/group_expenses_page.dart';
 import 'package:smartsplitclient/Group/State/group_state.dart';
 
 class GroupPage extends StatefulWidget {
   const GroupPage({super.key});
+  
 
   @override
   State<GroupPage> createState() => _GroupPageState();
@@ -102,49 +103,67 @@ class _GroupPageState extends State<GroupPage> {
                                           padding: const EdgeInsets.only(
                                             bottom: 12.0,
                                           ),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                CircleAvatar(
-                                                  backgroundColor:
-                                                      colorScheme
-                                                          .secondaryContainer,
-                                                  foregroundImage:
-                                                      const AssetImage(
-                                                        "assets/groups-icon.png",
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              Navigator.of(context).push(
+                                                PageRouteBuilder(
+                                                  pageBuilder:
+                                                      (_, __, ___) => GroupExpensesPage(
+                                                        groups[index],
                                                       ),
+                                                  transitionDuration:
+                                                      Duration.zero,
+                                                  reverseTransitionDuration:
+                                                      Duration.zero,
                                                 ),
-                                                const SizedBox(width: 16),
-                                                Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      group.name,
-                                                      style: theme
-                                                          .textTheme
-                                                          .bodyMedium
-                                                          ?.copyWith(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    const Text(
-                                                      'You are owed RM20',
-                                                      style: TextStyle(
-                                                        fontSize: 10,
+                                              );
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(16),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  CircleAvatar(
+                                                    backgroundColor:
+                                                        colorScheme
+                                                            .secondaryContainer,
+                                                    foregroundImage:
+                                                        const AssetImage(
+                                                          "assets/groups-icon.png",
+                                                        ),
+                                                  ),
+                                                  const SizedBox(width: 16),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        group.name,
+                                                        style: theme
+                                                            .textTheme
+                                                            .bodyMedium
+                                                            ?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
                                                       ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
+                                                      const SizedBox(height: 4),
+                                                      const Text(
+                                                        'You are owed RM20',
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         );
