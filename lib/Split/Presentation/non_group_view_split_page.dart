@@ -5,6 +5,7 @@ import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Constants/backend_url.dart';
 import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
+import 'package:smartsplitclient/Expense/Service/split_service.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
 import 'package:smartsplitclient/Split/Model/friend_split.dart';
 import 'package:smartsplitclient/Split/Model/guest_friend.dart';
@@ -13,11 +14,17 @@ import 'package:intl/intl.dart';
 import 'package:smartsplitclient/Split/Model/receipt_item.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 import 'package:smartsplitclient/Split/Presentation/attach_payment_page.dart';
+import 'package:smartsplitclient/Split/State/split_state.dart';
 
 class NonGroupViewSplitPage extends StatefulWidget {
-  const NonGroupViewSplitPage(this.splitBill, {super.key});
+  const NonGroupViewSplitPage(
+    this.splitBill, {
+    super.key,
+    this.fromExpenses = false,
+  });
 
   final SplitBill splitBill;
+  final bool fromExpenses;
 
   @override
   State<NonGroupViewSplitPage> createState() => _NonGroupViewSplitPageState();
@@ -25,6 +32,7 @@ class NonGroupViewSplitPage extends StatefulWidget {
 
 class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
   late SplitBill _splitBill;
+  final SplitService _splitService = SplitService();
   Map<Friend, List<Map<ReceiptItem, int>>> splits = {};
   List<Friend> splitKeys = [];
   int overallTotal = 0;
@@ -421,6 +429,52 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                 widget.splitBill.id,
               );
             }),
+            if (widget.fromExpenses)
+              _getTransparentButton(Icons.delete, () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        title: const Text("Delete Split Bill?"),
+                        content: const Text(
+                          "Are you sure you want to delete this split bill? This action cannot be undone.",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text("Cancel"),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text(
+                              "Delete",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                );
+
+                if (confirm == true) {
+                  final success = await _splitService.deleteSplitBill(
+                    widget.splitBill,
+                  );
+                  if (success) {
+                    if (mounted) Navigator.of(context).pop();
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Failed to delete split bill"),
+                        ),
+                      );
+                    }
+                  }
+                  context.read<SplitState>().loadAllData(
+                    context.read<AuthState>().currentUser!,
+                  );
+                }
+              }),
           ],
         ),
         body: ListView(

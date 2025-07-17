@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Group/Model/group.dart';
 import 'package:smartsplitclient/Group/Presentation/choose_group_members.dart';
 import 'package:smartsplitclient/Group/Presentation/group_expenses_page.dart';
 import 'package:smartsplitclient/Group/State/group_state.dart';
+import 'package:smartsplitclient/Split/Model/registered_friend.dart';
+import 'package:smartsplitclient/Split/State/split_state.dart';
 
 class GroupPage extends StatefulWidget {
   const GroupPage({super.key});
-  
 
   @override
   State<GroupPage> createState() => _GroupPageState();
@@ -99,6 +101,75 @@ class _GroupPageState extends State<GroupPage> {
                                       itemCount: groups.length,
                                       itemBuilder: (context, index) {
                                         final Group group = groups[index];
+
+                                        final splitState =
+                                            context.watch<SplitState>();
+                                        final user =
+                                            context
+                                                .read<AuthState>()
+                                                .currentUser;
+
+                                        double totalOwedByMe = 0;
+                                        double totalOwedToMe = 0;
+
+                                        for (final billList
+                                            in splitState.myDebts.values) {
+                                          for (final bill in billList) {
+                                            if (bill.groupId ==
+                                                group.id.toString()) {
+                                              final totalYouOwed =
+                                                  bill.members.fold<int>(0, (
+                                                    sum,
+                                                    member,
+                                                  ) {
+                                                    if ((member.friend
+                                                                is RegisteredFriend &&
+                                                            (member.friend
+                                                                        as RegisteredFriend)
+                                                                    .id ==
+                                                                user!.id) &&
+                                                        !member.hasPaid) {
+                                                      return sum +
+                                                          member.totalDebt;
+                                                    }
+                                                    return sum;
+                                                  }) /
+                                                  100;
+
+                                              totalOwedByMe += totalYouOwed;
+                                            }
+                                          }
+                                        }
+
+                                        for (final billList
+                                            in splitState.mySplitBills.values) {
+                                          for (final bill in billList) {
+                                            if (bill.groupId ==
+                                                group.id.toString()) {
+                                              final totalOwedToYou =
+                                                  bill.members.fold<int>(0, (
+                                                    sum,
+                                                    member,
+                                                  ) {
+                                                    if ((member.friend
+                                                                is RegisteredFriend &&
+                                                            (member.friend
+                                                                        as RegisteredFriend)
+                                                                    .id !=
+                                                                user!.id) &&
+                                                        !member.hasPaid) {
+                                                      return sum +
+                                                          member.totalDebt;
+                                                    }
+                                                    return sum;
+                                                  }) /
+                                                  100;
+
+                                              totalOwedToMe += totalOwedToYou;
+                                            }
+                                          }
+                                        }
+
                                         return Padding(
                                           padding: const EdgeInsets.only(
                                             bottom: 12.0,
@@ -108,9 +179,10 @@ class _GroupPageState extends State<GroupPage> {
                                               Navigator.of(context).push(
                                                 PageRouteBuilder(
                                                   pageBuilder:
-                                                      (_, __, ___) => GroupExpensesPage(
-                                                        groups[index],
-                                                      ),
+                                                      (_, __, ___) =>
+                                                          GroupExpensesPage(
+                                                            groups[index],
+                                                          ),
                                                   transitionDuration:
                                                       Duration.zero,
                                                   reverseTransitionDuration:
@@ -154,11 +226,63 @@ class _GroupPageState extends State<GroupPage> {
                                                             ),
                                                       ),
                                                       const SizedBox(height: 4),
-                                                      const Text(
-                                                        'You are owed RM20',
-                                                        style: TextStyle(
-                                                          fontSize: 10,
-                                                        ),
+                                                      Row(
+                                                        children: [
+                                                          if (totalOwedToMe !=
+                                                              0.0) ...[
+                                                            Text(
+                                                              'Owed to you: ',
+                                                              style:
+                                                                  const TextStyle(
+                                                                    fontSize:
+                                                                        10,
+                                                                  ),
+                                                            ),
+                                                            Text(
+                                                              'RM${totalOwedToMe.toStringAsFixed(2)}',
+                                                              style: const TextStyle(
+                                                                fontSize: 10,
+                                                                color:
+                                                                    Colors.red,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                          if (totalOwedToMe !=
+                                                                  0.0 &&
+                                                              totalOwedByMe !=
+                                                                  0.0)
+                                                            const Text(
+                                                              '  |  ',
+                                                              style: TextStyle(
+                                                                fontSize: 10,
+                                                              ),
+                                                            ),
+                                                          if (totalOwedByMe !=
+                                                              0.0) ...[
+                                                            Text(
+                                                              'You owe: ',
+                                                              style:
+                                                                  const TextStyle(
+                                                                    fontSize:
+                                                                        10,
+                                                                  ),
+                                                            ),
+                                                            Text(
+                                                              'RM${totalOwedByMe.toStringAsFixed(2)}',
+                                                              style: const TextStyle(
+                                                                fontSize: 10,
+                                                                color:
+                                                                    Colors.red,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ],
                                                       ),
                                                     ],
                                                   ),

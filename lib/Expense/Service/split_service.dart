@@ -18,6 +18,25 @@ import 'package:smartsplitclient/Split/Model/registered_friend.dart';
 class SplitService {
   final FriendService _friendService = FriendService();
 
+  Future<bool> deleteSplitBill(SplitBill splitBill) async{
+    final user = FirebaseAuth.instance.currentUser;
+    final idToken = await user?.getIdToken(true);
+
+    final response = await http.delete(
+      Uri.parse(BackendUrl.SPLIT_SERVICE),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+      body : jsonEncode({
+        "id" : splitBill.id
+      })
+    );
+
+
+    return response.statusCode == 200;
+  }
+
   Future<bool> saveSplit(Receipt receipt, {Group? group}) async {
     final user = FirebaseAuth.instance.currentUser;
     final idToken = await user?.getIdToken(true);

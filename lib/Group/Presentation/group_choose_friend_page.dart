@@ -167,15 +167,16 @@ class _GroupChooseFriendPageState extends State<GroupChooseFriendPage> {
   }
 
   Widget _getFriendSelections(FriendState friendState) {
-    final groupMemberIds = widget.group.members.map((m) => m.id).toSet();
-
     final filtered =
-        friendState.myFriends.where((f) {
-          final isInGroup = groupMemberIds.contains(f.id);
-          final matchesSearch =
-              f.username.toLowerCase().contains(_searchQuery) ||
-              f.email.toLowerCase().contains(_searchQuery);
-          return isInGroup && matchesSearch;
+        widget.group.members.where((member) {
+          final nameMatch = member.username.toLowerCase().contains(
+            _searchQuery,
+          );
+          final emailMatch = (member.email.toLowerCase()).contains(
+            _searchQuery,
+          );
+          final userMatch = (member.id == context.read<AuthState>().currentUser!.id);
+          return (nameMatch || emailMatch) && !userMatch;
         }).toList();
 
     return ListView.builder(
@@ -321,7 +322,10 @@ class _GroupChooseFriendPageState extends State<GroupChooseFriendPage> {
                       Navigator.of(context).push(
                         PageRouteBuilder(
                           pageBuilder:
-                              (_, __, ___) => SplitPage(group: widget.group, _selectedFriends),
+                              (_, __, ___) => SplitPage(
+                                group: widget.group,
+                                _selectedFriends,
+                              ),
                           transitionDuration: Duration.zero,
                           reverseTransitionDuration: Duration.zero,
                         ),

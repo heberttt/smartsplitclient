@@ -198,15 +198,14 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     return items;
   }
 
-
-  Widget _expenseCard(Expense expense) {
+  Widget _expenseCard(Expense expense, {bool fromExpenses = false}) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => NonGroupViewSplitPage(expense.splitBill),
+              builder: (_) => NonGroupViewSplitPage(expense.splitBill, fromExpenses: fromExpenses,),
             ),
           );
         },
@@ -269,8 +268,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
       owedPerMonth[month] = owedPerMonth[month]! + othersOwe;
     }
 
-    
-
     return _buildBarChart(
       paidPerMonth,
       owedPerMonth,
@@ -313,8 +310,6 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
         paidPerMonth[month] = paidPerMonth[month]! + (myMember.totalDebt / 100);
       }
     }
-
-
 
     return _buildBarChart(
       owedPerMonth,
@@ -446,6 +441,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     SplitState splitState,
     Account user, {
     required Widget graphWidget,
+    required bool isExpensesTab,
   }) {
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -476,7 +472,7 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                 ),
               );
             } else if (item is ExpenseCardItem) {
-              return _expenseCard(item.expense);
+              return _expenseCard(item.expense, fromExpenses: isExpensesTab);
             }
             return const SizedBox.shrink();
           }).toList(),
@@ -493,17 +489,19 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     final user = context.read<AuthState>().currentUser!;
     final colorScheme = theme.colorScheme;
     final groupedExpenses = _groupExpensesOrDebts(
-  splitState.mySplitBills.values
-      .expand((e) => e)
-      .where((bill) => bill.groupId.isEmpty)
-      .toList(),
-  user,
-  isDebt: false,
-);
+      splitState.mySplitBills.values
+          .expand((e) => e)
+          .where((bill) => bill.groupId.isEmpty)
+          .toList(),
+      user,
+      isDebt: false,
+    );
 
     final groupedDebts = _groupExpensesOrDebts(
-      splitState.myDebts.values.expand((e) => e).where((bill) => bill.groupId.isEmpty)
-      .toList(),
+      splitState.myDebts.values
+          .expand((e) => e)
+          .where((bill) => bill.groupId.isEmpty)
+          .toList(),
       user,
       isDebt: true,
     );
@@ -547,12 +545,13 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                     splitState,
                     user,
                     graphWidget: _buildExpensesAnalyticsChart(
-  splitState.mySplitBills.values
-      .expand((e) => e)
-      .where((bill) => bill.groupId.isEmpty)
-      .toList(),
-  user,
-),
+                      splitState.mySplitBills.values
+                          .expand((e) => e)
+                          .where((bill) => bill.groupId.isEmpty)
+                          .toList(),
+                      user,
+                    ),
+                    isExpensesTab: true
                   ),
                   _buildScrollableTabContent(
                     groupedDebts,
@@ -561,9 +560,13 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
                     splitState,
                     user,
                     graphWidget: _buildDebtsAnalyticsChart(
-                      splitState.myDebts.values.expand((e) => e).where((bill) => bill.groupId.isEmpty).toList(),
+                      splitState.myDebts.values
+                          .expand((e) => e)
+                          .where((bill) => bill.groupId.isEmpty)
+                          .toList(),
                       user,
                     ),
+                    isExpensesTab: false
                   ),
                 ],
               ),

@@ -45,6 +45,44 @@ class GroupService {
     return Group(json['id'], json['name'], members);
   }
 
+  Future<bool> inviteToGroup(int groupId, String friendId) async{
+    final user = FirebaseAuth.instance.currentUser;
+    final idToken = await user?.getIdToken(true);
+
+    final response = await http.post(
+      Uri.parse("${BackendUrl.GROUP_SERVICE}/members"),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+         "groupId" : groupId,
+         "friendId" : friendId
+      })
+    );
+
+    return response.statusCode == 200;
+  }
+
+
+  Future<bool> leaveGroup(int groupId) async{
+    final user = FirebaseAuth.instance.currentUser;
+    final idToken = await user?.getIdToken(true);
+
+    final response = await http.delete(
+      Uri.parse("${BackendUrl.GROUP_SERVICE}/members"),
+      headers: {
+        'Authorization': 'Bearer $idToken',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+         "groupId" : groupId,
+      })
+    );
+
+    return response.statusCode == 200;
+  }
+
 
   Future<bool> createGroup(String name, List<String> membersId)  async{
     final user = FirebaseAuth.instance.currentUser;

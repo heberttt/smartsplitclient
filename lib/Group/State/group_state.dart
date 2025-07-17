@@ -9,6 +9,15 @@ class GroupState with ChangeNotifier {
 
   bool isLoadingGroups = false;
 
+  Group? getGroupById(int id) {
+  for (var group in myGroups) {
+    if (group.id == id) {
+      return group;
+    }
+  }
+  return null;
+}
+
   Future<void> getMyGroups() async {
     isLoadingGroups = true;
     notifyListeners();
@@ -18,6 +27,7 @@ class GroupState with ChangeNotifier {
     isLoadingGroups = false;
     notifyListeners();
   }
+  
 
   void clear() {
     myGroups = [];

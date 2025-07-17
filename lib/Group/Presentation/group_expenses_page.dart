@@ -8,7 +8,9 @@ import 'package:smartsplitclient/Expense/Model/friend_payment.dart';
 import 'package:smartsplitclient/Expense/Model/split_bill.dart';
 import 'package:smartsplitclient/Friend/State/friend_state.dart';
 import 'package:smartsplitclient/Group/Model/group.dart';
+import 'package:smartsplitclient/Group/Presentation/add_member_page.dart';
 import 'package:smartsplitclient/Group/Presentation/group_choose_friend_page.dart';
+import 'package:smartsplitclient/Group/Service/group_service.dart';
 import 'package:smartsplitclient/Group/State/group_state.dart';
 import 'package:smartsplitclient/Split/Model/guest_friend.dart';
 import 'package:smartsplitclient/Split/Model/registered_friend.dart';
@@ -53,6 +55,8 @@ class GroupExpensesPage extends StatefulWidget {
 }
 
 class _GroupExpensesPageState extends State<GroupExpensesPage> {
+  final GroupService _groupService = GroupService();
+
   @override
   void initState() {
     super.initState();
@@ -203,14 +207,18 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
     return items;
   }
 
-  Widget _expenseCard(Expense expense) {
+  Widget _expenseCard(Expense expense, {bool fromExpenses = false}) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: ListTile(
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => NonGroupViewSplitPage(expense.splitBill),
+              builder:
+                  (_) => NonGroupViewSplitPage(
+                    expense.splitBill,
+                    fromExpenses: fromExpenses,
+                  ),
             ),
           );
         },
@@ -445,130 +453,151 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
     Future<void> Function() onRefresh,
     SplitState splitState,
     Account user, {
+    required bool isExpensesTab,
     required Widget graphWidget,
   }) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      child: grouped.isEmpty
-    ? ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 100),
-          Center(
-            child: Text(
-              'No data',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ),
-        ],
-      )
-    : ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Text("Spending in ${DateTime.now().year}"),
-          ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: graphWidget,
-          ),
-          const SizedBox(height: 20),
-          ..._flattenedItems(grouped).map((item) {
-            if (item is MonthHeaderItem) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  item.month,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+      child:
+          grouped.isEmpty
+              ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 100),
+                  Center(
+                    child: Text(
+                      'No data',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
                   ),
-                ),
-              );
-            } else if (item is ExpenseCardItem) {
-              return _expenseCard(item.expense);
-            }
-            return const SizedBox.shrink();
-          }),
-          const SizedBox(height: 100),
-        ],
-      ),
-
+                ],
+              )
+              : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Text("Spending in ${DateTime.now().year}"),
+                  ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: graphWidget,
+                  ),
+                  const SizedBox(height: 20),
+                  ..._flattenedItems(grouped).map((item) {
+                    if (item is MonthHeaderItem) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: Text(
+                          item.month,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    } else if (item is ExpenseCardItem) {
+                      return _expenseCard(
+                        item.expense,
+                        fromExpenses: isExpensesTab,
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
+                  const SizedBox(height: 100),
+                ],
+              ),
     );
   }
 
-  Widget _buildMemberTabContent() {
-  final group = widget.group;
-  final members = group.members;
+  Widget _buildMemberTabContent(Group group) {
+    final members = group.members;
 
-  return RefreshIndicator(
-    onRefresh: () async {
-      await context.read<GroupState>().getMyGroups();
-      setState(() {});
-    },
-    child: members.isEmpty
-        ? ListView(
-            children: const [
-              SizedBox(height: 100),
-              Center(
-                child: Text(
-                  'No members in this group.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ),
-            ],
-          )
-        : ListView.builder(
-            padding: const EdgeInsets.only(top: 12, bottom: 100),
-            itemCount: members.length,
-            itemBuilder: (context, index) {
-              final member = members[index];
-
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Colors.grey.shade300,
-                      foregroundImage: member.profilePictureLink.isNotEmpty
-                          ? NetworkImage(member.profilePictureLink)
-                          : null,
-                      child: member.profilePictureLink.isEmpty
-                          ? const Icon(Icons.person, color: Colors.white)
-                          : null,
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<GroupState>().getMyGroups();
+      },
+      child:
+          members.isEmpty
+              ? ListView(
+                children: const [
+                  SizedBox(height: 100),
+                  Center(
+                    child: Text(
+                      'No members in this group.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(member.username,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500)),
-                          Text(
-                            member.email,
-                            style:
-                                const TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
+                ],
+              )
+              : ListView.builder(
+                padding: const EdgeInsets.only(top: 12, bottom: 100),
+                itemCount: members.length,
+                itemBuilder: (context, index) {
+                  final member = members[index];
+
+                  return Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.grey.shade300,
+                          foregroundImage:
+                              member.profilePictureLink.isNotEmpty
+                                  ? NetworkImage(member.profilePictureLink)
+                                  : null,
+                          child:
+                              member.profilePictureLink.isEmpty
+                                  ? const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                  )
+                                  : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                member.username,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                member.email,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-  );
-}
+                  );
+                },
+              ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -576,6 +605,11 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
     final user = context.read<AuthState>().currentUser!;
     final colorScheme = theme.colorScheme;
     final groupId = widget.group.id.toString();
+
+    final updatedGroup =
+        context.watch<GroupState>().getGroupById(widget.group.id) ??
+        widget.group;
+
 
     final groupedExpenses = _groupExpensesOrDebts(
       splitState.mySplitBills.values
@@ -604,16 +638,103 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
           elevation: 0,
           centerTitle: true,
           automaticallyImplyLeading: false,
+          actions: [
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onSelected: (value) async {
+                if (value == 'add') {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder:
+                        (_) => Padding(
+                          padding: const EdgeInsets.only(top: 40),
+                          child: AddMemberPage(group: widget.group),
+                        ),
+                  );
+                } else if (value == 'leave') {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Leave Group'),
+                          content: const Text(
+                            'Are you sure you want to leave this group?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Leave'),
+                            ),
+                          ],
+                        ),
+                  );
+
+                  if (confirm == true) {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder:
+                          (_) =>
+                              const Center(child: CircularProgressIndicator()),
+                    );
+
+                    bool success = false;
+
+                    try {
+                      success = await _groupService.leaveGroup(widget.group.id);
+                    } catch (e) {
+                      success = false;
+                    }
+
+                    Navigator.pop(context);
+
+                    if (success) {
+                      await context.read<GroupState>().getMyGroups();
+
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('You have left the group.'),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to leave the group.'),
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+              itemBuilder:
+                  (BuildContext context) => [
+                    const PopupMenuItem<String>(
+                      value: 'add',
+                      child: Text('Add Member'),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'leave',
+                      child: Text('Leave group'),
+                    ),
+                  ],
+            ),
+          ],
           leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          behavior: HitTestBehavior.opaque,
-          child: const Padding(
-            padding: EdgeInsets.all(10),
-            child: Icon(Icons.arrow_back, size: 35, color: Colors.white),
+            onTap: () => Navigator.pop(context),
+            behavior: HitTestBehavior.opaque,
+            child: const Padding(
+              padding: EdgeInsets.all(10),
+              child: Icon(Icons.arrow_back, size: 35, color: Colors.white),
+            ),
           ),
-        ),
           title: Text(
-            'Group expenses',
+            widget.group.name,
             style: theme.textTheme.titleLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -629,7 +750,11 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
                 unselectedLabelColor: Colors.black54,
                 indicatorColor: Colors.black,
                 indicatorWeight: 2.5,
-                tabs: [Tab(text: 'Expenses'), Tab(text: 'Debts'), Tab(text: 'Members',)],
+                tabs: [
+                  Tab(text: 'Expenses'),
+                  Tab(text: 'Debts'),
+                  Tab(text: 'Members'),
+                ],
               ),
             ),
             Expanded(
@@ -648,6 +773,7 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
                           .toList(),
                       user,
                     ),
+                    isExpensesTab: true,
                   ),
                   _buildScrollableTabContent(
                     groupedDebts,
@@ -662,8 +788,9 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
                           .toList(),
                       user,
                     ),
+                    isExpensesTab: false,
                   ),
-                  _buildMemberTabContent()
+                  _buildMemberTabContent(updatedGroup),
                 ],
               ),
             ),
@@ -675,7 +802,8 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
           onPressed: () {
             Navigator.of(context).push(
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => GroupChooseFriendPage(widget.group),
+                pageBuilder:
+                    (_, __, ___) => GroupChooseFriendPage(widget.group),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),
