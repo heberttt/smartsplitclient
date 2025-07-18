@@ -67,7 +67,6 @@ class _OcrLoadingScreenState extends State<OcrLoadingScreen> {
     final String? downloadUrl = await _getReceiptImageDownloadURL(id);
 
     if (!isUploaded) {
-      // handle this error
       int secondsLeft = 5;
       Timer? countdownTimer;
 

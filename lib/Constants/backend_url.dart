@@ -2,7 +2,9 @@
  
 
 class BackendUrl {
-  static const String GATEWAY_URL = "http://192.168.100.61:8080";
+  static const String SMARTLINK_URL= "https://smartlink.hebertp.cc";
+
+  static const String GATEWAY_URL = "https://smartsplit.hebertp.cc";
 
   static const String OCR_SERVICE_URL = "$GATEWAY_URL/ocr/scan";
 

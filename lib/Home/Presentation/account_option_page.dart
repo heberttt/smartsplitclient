@@ -60,26 +60,26 @@ class _AccountOptionPageState extends State<AccountOptionPage> {
                 );
               },
             ),
-            _buildButton(
-              icon: Icons.receipt_long,
-              label: 'Billing History',
-              onTap: () {
-                // Navigate to billing screen
-              },
-            ),
-            _buildButton(
-              icon: Icons.settings,
-              label: 'App Settings',
-              onTap: () {
-                Navigator.of(context).push(
-                  PageRouteBuilder(
-                    pageBuilder: (_, _, _) => ExperimentRoom(),
-                    transitionDuration: Duration.zero,
-                    reverseTransitionDuration: Duration.zero,
-                  ),
-                );
-              },
-            ),
+            // _buildButton(
+            //   icon: Icons.receipt_long,
+            //   label: 'Billing History',
+            //   onTap: () {
+            //     // Navigate to billing screen
+            //   },
+            // ),
+            // _buildButton(
+            //   icon: Icons.settings,
+            //   label: 'App Settings',
+            //   onTap: () {
+            //     // Navigator.of(context).push(
+            //     //   PageRouteBuilder(
+            //     //     pageBuilder: (_, _, _) => ExperimentRoom(),
+            //     //     transitionDuration: Duration.zero,
+            //     //     reverseTransitionDuration: Duration.zero,
+            //     //   ),
+            //     // );
+            //   },
+            // ),
             const Divider(height: 40),
             _buildButton(
               icon: Icons.logout,

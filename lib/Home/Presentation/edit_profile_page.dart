@@ -466,7 +466,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                 const SizedBox(height: 32),
 
-                // Connect to Google
                 ElevatedButton.icon(
                   onPressed:
                       isLinkedWithGoogle

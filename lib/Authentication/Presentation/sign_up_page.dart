@@ -74,7 +74,7 @@ class _SignUpPageState extends State<SignUpPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Closes the dialog
+                Navigator.of(context).pop();
               },
               child: const Text('Ok'),
             ),
@@ -94,7 +94,7 @@ class _SignUpPageState extends State<SignUpPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Closes the dialog
+                Navigator.of(context).pop();
               },
               child: const Text('Ok'),
             ),
@@ -121,11 +121,9 @@ class _SignUpPageState extends State<SignUpPage> {
                 children: [
                   const SizedBox(height: 40),
 
-                  // Logo
                   Image.asset('assets/logo.png', height: 150),
                   const SizedBox(height: 40),
 
-                  // Name TextField
                   TextField(
                     controller: _nameController,
                     decoration: const InputDecoration(
@@ -136,7 +134,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Email TextField
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -148,7 +145,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Password TextField
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
@@ -160,7 +156,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Confirm Password TextField
                   TextField(
                     controller: _confirmPasswordController,
                     obscureText: true,

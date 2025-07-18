@@ -405,7 +405,7 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
 
   void _shareBillLink(String token, int billId) {
     final String link =
-        '${BackendUrl.GATEWAY_URL}/splitview/?billId=$billId&token=$token';
+        '${BackendUrl.SMARTLINK_URL}/splitview/?billId=$billId&token=$token';
     SharePlus.instance.share(
       ShareParams(text: 'Check out our split bill! $link'),
     );

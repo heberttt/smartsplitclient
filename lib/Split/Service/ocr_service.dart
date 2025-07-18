@@ -22,7 +22,7 @@ class OcrService {
 
     print(response.statusCode.toString() + "${response.body}");
 
-    if (response.statusCode == 200){ //re check returned status code
+    if (response.statusCode == 200){
       return jsonDecode(response.body);
     }
 
