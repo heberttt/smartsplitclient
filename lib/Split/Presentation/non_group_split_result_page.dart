@@ -231,6 +231,33 @@ class _SplitResultPageState extends State<SplitResultPage> {
     );
   }
 
+  void _showBackCloseConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Discard changes?"),
+          content: const Text(
+            "Are you sure you want to go back? Your current progress will be lost.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     overallTotal = 0;
@@ -244,7 +271,7 @@ class _SplitResultPageState extends State<SplitResultPage> {
           }),
           actions: [
             _getTransparentButton(Icons.close, () {
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              _showBackCloseConfirmationDialog(context);
             }),
           ],
         ),

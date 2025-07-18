@@ -16,6 +16,7 @@ class _FriendsPageState extends State<FriendsPage> {
   int _selectedTab = 0;
   final TextEditingController _emailController = TextEditingController();
   final FriendService _friendService = FriendService();
+  String _searchQuery = '';
 
   @override
   void dispose() {
@@ -324,25 +325,30 @@ class _FriendsPageState extends State<FriendsPage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-        backgroundColor: colorScheme.primary,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Friends',
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+          backgroundColor: colorScheme.primary,
+          elevation: 0,
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          title: Text(
+            'Friends',
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ),
         body: SafeArea(
           child: Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.all(12.0),
+              Padding(
+                padding: const EdgeInsets.all(12.0),
                 child: TextField(
-                  decoration: InputDecoration(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.toLowerCase();
+                    });
+                  },
+                  decoration: const InputDecoration(
                     hintText: 'Search',
                     prefixIcon: Icon(Icons.search),
                     fillColor: Colors.white,
@@ -432,9 +438,9 @@ class _FriendsPageState extends State<FriendsPage> {
                               final email = _emailController.text.trim();
                               if (email.isNotEmpty) {
                                 print("Sending friend request to $email");
-              
+
                                 await _sendRequest(email);
-              
+
                                 _emailController.clear();
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -464,7 +470,7 @@ class _FriendsPageState extends State<FriendsPage> {
                           friendState.isLoadingFriendRequests) {
                         return const Center(child: CircularProgressIndicator());
                       }
-              
+
                       return RefreshIndicator(
                         onRefresh: () async {
                           if (_selectedTab == 0) {
@@ -479,7 +485,7 @@ class _FriendsPageState extends State<FriendsPage> {
                                 _selectedTab == 0
                                     ? friendState.myFriends.isEmpty
                                     : friendState.myFriendRequests.isEmpty;
-              
+
                             if (isEmpty) {
                               return ListView(
                                 physics: const AlwaysScrollableScrollPhysics(),
@@ -501,17 +507,25 @@ class _FriendsPageState extends State<FriendsPage> {
                                 ],
                               );
                             }
-              
+
+                            final filteredFriends =
+                                friendState.myFriends.where((friend) {
+                                  final name = friend.username.toLowerCase();
+                                  final email = friend.email.toLowerCase();
+                                  return name.contains(_searchQuery) ||
+                                      email.contains(_searchQuery);
+                                }).toList();
+
                             return ListView.builder(
                               physics: const AlwaysScrollableScrollPhysics(),
                               itemCount:
                                   _selectedTab == 0
-                                      ? friendState.myFriends.length
+                                      ? filteredFriends.length
                                       : friendState.myFriendRequests.length,
                               itemBuilder: (context, index) {
                                 if (_selectedTab == 0) {
                                   return _constructFriend(
-                                    friendState.myFriends[index],
+                                    filteredFriends[index],
                                   );
                                 } else {
                                   return _constructFriendRequest(
