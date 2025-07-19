@@ -5,7 +5,7 @@ class ReceiptImageRepository {
 
   Future<bool> uploadReceiptImage(ReceiptImage image) async {
     final storageRef = FirebaseStorage.instance.ref();
-    final mountainsRef = storageRef.child("${image.id}.jpg");
+    final mountainsRef = storageRef.child("receipts/${image.id}.jpg");
     try {
       await mountainsRef.putFile(image.imageFile);
       
@@ -18,7 +18,7 @@ class ReceiptImageRepository {
 
   Future<String?> getImageDownloadURL(String imageId) async{
     final storageRef = FirebaseStorage.instance.ref();
-    final mountainsRef = storageRef.child("$imageId.jpg");
+    final mountainsRef = storageRef.child("receipts/$imageId.jpg");
     try {
       String downloadUrl = await mountainsRef.getDownloadURL();
       return downloadUrl;
