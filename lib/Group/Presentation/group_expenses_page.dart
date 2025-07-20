@@ -649,7 +649,7 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
                     builder:
                         (_) => Padding(
                           padding: const EdgeInsets.only(top: 40),
-                          child: AddMemberPage(group: widget.group),
+                          child: AddMemberPage(group: updatedGroup),
                         ),
                   );
                 } else if (value == 'leave') {
@@ -803,7 +803,7 @@ class _GroupExpensesPageState extends State<GroupExpensesPage> {
             Navigator.of(context).push(
               PageRouteBuilder(
                 pageBuilder:
-                    (_, __, ___) => GroupChooseFriendPage(widget.group),
+                    (_, __, ___) => GroupChooseFriendPage(updatedGroup),
                 transitionDuration: Duration.zero,
                 reverseTransitionDuration: Duration.zero,
               ),
