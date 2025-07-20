@@ -53,9 +53,11 @@ class _SignUpPageState extends State<SignUpPage> {
         showWarningDialog(context, 'The password provided is too weak.');
       } else if (e.code == 'email-already-in-use') {
         showWarningDialog(context, 'The account already exists for that email.');
+      } else{
+        showWarningDialog(context, '${e.message}');
       }
     } catch (e) {
-      showWarningDialog(context, e.toString());
+      showWarningDialog(context, "Something went wrong");
     }
 
     setState(() {

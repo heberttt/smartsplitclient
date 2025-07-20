@@ -31,10 +31,11 @@ class _FriendsPageState extends State<FriendsPage> {
       if (success) {
         showSuccessDialog("Friend request sent to $email");
       } else {
-        showSuccessDialog("Friend request failed");
+        showSuccessDialog("Friend request failed. Check if the email is correct");
       }
     } catch (e) {
-      showWarningDialog("Friend request failed. Error: ${e.toString()}");
+      showWarningDialog("Friend request failed. Check if the email is correct or if the friend is already added");
+      print(e.toString());
     }
   }
 

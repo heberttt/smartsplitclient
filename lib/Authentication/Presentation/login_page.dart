@@ -197,11 +197,12 @@ class _LoginPageState extends State<LoginPage> {
       } else if (e.code == 'invalid-credential') {
         showWarningDialog('Wrong password provided.');
       } else {
-        showWarningDialog('FirebaseAuthException: ${e.code} - ${e.message}');
+        showWarningDialog('${e.message}');
       }
     } catch (e) {
       Navigator.pop(context);
-      showWarningDialog('Unknown error: $e');
+      showWarningDialog('Unknown error');
+      print(e.toString());
     }
 
     setState(() {
