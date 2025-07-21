@@ -23,7 +23,13 @@ class FriendService {
     if (response.statusCode == 200) {
       return true;
     } else {
-      throw Exception('Failed to send friend request: ${response.body}');
+      String errMessage = '${jsonDecode(response.body)['errorMessage']}';
+
+      if (errMessage.startsWith("java.lang.Exception: ")){
+        errMessage = errMessage.replaceFirst('java.lang.Exception:', ''.trim());
+      }
+      
+      throw Exception('Failed to send friend request: $errMessage');
     }
   }
 

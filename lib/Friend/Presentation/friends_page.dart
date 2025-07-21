@@ -34,7 +34,7 @@ class _FriendsPageState extends State<FriendsPage> {
         showSuccessDialog("Friend request failed. Check if the email is correct");
       }
     } catch (e) {
-      showWarningDialog("Friend request failed. Check if the email is correct or if the friend is already added");
+      showWarningDialog(e.toString());
       print(e.toString());
     }
   }
