@@ -46,9 +46,7 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
   Future<String?> _popUpItemName(BuildContext context) async {
     final controller = TextEditingController();
     controller.text = widget.item.itemName;
-    InputDecoration decoration = InputDecoration(
-      hintText: '',
-    );
+    InputDecoration decoration = InputDecoration(hintText: '');
 
     return await showDialog<String>(
       context: context,
@@ -72,8 +70,7 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                         setState(() {
                           controller.text = "";
                           decoration = InputDecoration(
-                            hintText:
-                                "Enter an item name",
+                            hintText: "Enter an item name",
                             hintStyle: TextStyle(
                               color: Colors.red,
                               fontSize: 10,
@@ -94,7 +91,8 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
   Future<int?> _popUpItemLeftValue(BuildContext context) async {
     final controller = TextEditingController();
     InputDecoration decoration = InputDecoration(
-      hintText: 'More than or equal to ${widget.item.quantity - _getAmountLeft(widget.splits, widget.item.quantity)}',
+      hintText:
+          'More than or equal to ${widget.item.quantity - _getAmountLeft(widget.splits, widget.item.quantity)}',
     );
 
     return await showDialog<int>(
@@ -114,7 +112,13 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                     onPressed: () {
                       final input = int.tryParse(controller.text);
                       if (input != null &&
-                          input >= 0 && input >= widget.item.quantity - _getAmountLeft(widget.splits, widget.item.quantity)) {
+                          input >= 0 &&
+                          input >=
+                              widget.item.quantity -
+                                  _getAmountLeft(
+                                    widget.splits,
+                                    widget.item.quantity,
+                                  )) {
                         Navigator.of(context).pop(input);
                       } else {
                         setState(() {
@@ -188,7 +192,10 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
     );
   }
 
-  Future<double?> _popUpTotalPriceValue(int currentPrice, BuildContext context) async {
+  Future<double?> _popUpTotalPriceValue(
+    int currentPrice,
+    BuildContext context,
+  ) async {
     final controller = TextEditingController();
     InputDecoration decoration = InputDecoration(
       hintText: "${currentPrice / 100}",
@@ -210,15 +217,13 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                   TextButton(
                     onPressed: () {
                       final input = double.tryParse(controller.text);
-                      if (input != null &&
-                          input >= 0) {
+                      if (input != null && input >= 0) {
                         Navigator.of(context).pop(input);
                       } else {
                         setState(() {
                           controller.text = "";
                           decoration = InputDecoration(
-                            hintText:
-                                "Please enter a price more than 0",
+                            hintText: "Please enter a price more than 0",
                             hintStyle: TextStyle(
                               color: Colors.red,
                               fontSize: 10,
@@ -310,13 +315,20 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  GestureDetector(onTap: () async {
-                    String? result = await _popUpItemName(context);
+                  GestureDetector(
+                    onTap: () async {
+                      String? result = await _popUpItemName(context);
 
-                    if (result != null){
-                      widget.item.itemName = result;
-                    }
-                  },child: Text(widget.item.itemName)),
+                      if (result != null) {
+                        widget.item.itemName = result;
+                      }
+                    },
+                    child: Text(
+                      widget.item.itemName.length > 40
+                          ? '${widget.item.itemName.substring(0, 40)}...'
+                          : widget.item.itemName,
+                    ),
+                  ),
                   Checkbox(
                     value: selected,
                     onChanged:
@@ -349,8 +361,8 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                   GestureDetector(
                     onTap: () async {
                       int? result = await _popUpItemLeftValue(context);
-                      
-                      if (result != null){
+
+                      if (result != null) {
                         widget.item.quantity = result;
                       }
                     },
@@ -409,9 +421,12 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                       padding: const EdgeInsets.only(right: 12),
                       child: GestureDetector(
                         onTap: () async {
-                          double? value = await _popUpTotalPriceValue(widget.item.totalPrice, context);
+                          double? value = await _popUpTotalPriceValue(
+                            widget.item.totalPrice,
+                            context,
+                          );
 
-                          if (value != null){
+                          if (value != null) {
                             widget.item.totalPrice = (value * 100).round();
                           }
                         },

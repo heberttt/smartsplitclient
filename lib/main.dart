@@ -26,6 +26,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (context) => GroupState()..getMyGroups()),
       ],
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         theme: LightTheme().theme,
         home: SafeArea(
           child: const AuthGate(),
