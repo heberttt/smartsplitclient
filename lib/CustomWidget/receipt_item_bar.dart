@@ -320,7 +320,9 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                       String? result = await _popUpItemName(context);
 
                       if (result != null) {
-                        widget.item.itemName = result;
+                        setState(() {
+                          widget.item.itemName = result;
+                        });
                       }
                     },
                     child: Text(
@@ -363,7 +365,9 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                       int? result = await _popUpItemLeftValue(context);
 
                       if (result != null) {
-                        widget.item.quantity = result;
+                        setState(() {
+                          widget.item.quantity = result;
+                        });
                       }
                     },
                     child: Text(
@@ -427,7 +431,9 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
                           );
 
                           if (value != null) {
-                            widget.item.totalPrice = (value * 100).round();
+                            setState(() {
+                              widget.item.totalPrice = (value * 100).round();
+                            });
                           }
                         },
                         child: Text(

@@ -29,6 +29,12 @@ class _LoginPageState extends State<LoginPage> {
   String _loginButtonText = "Login";
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    context.read<AuthState>().logout(context);
+    super.initState();
+  }
+
   Future<void> _initializeUser(BuildContext context) async {
     final response = await AccountService().login();
 
