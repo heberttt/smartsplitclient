@@ -440,45 +440,62 @@ class _YourExpensesPageState extends State<YourExpensesPage> {
     Future<void> Function() onRefresh,
     SplitState splitState,
     Account user, {
-    required Widget graphWidget,
     required bool isExpensesTab,
+    required Widget graphWidget,
   }) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0),
-            child: Text("Spending in ${DateTime.now().year}"),
-          ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: graphWidget,
-          ),
-          const SizedBox(height: 20),
-          ..._flattenedItems(grouped).map((item) {
-            if (item is MonthHeaderItem) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Text(
-                  item.month,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+      child:
+          grouped.isEmpty
+              ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 100),
+                  Center(
+                    child: Text(
+                      'No data',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
                   ),
-                ),
-              );
-            } else if (item is ExpenseCardItem) {
-              return _expenseCard(item.expense, fromExpenses: isExpensesTab);
-            }
-            return const SizedBox.shrink();
-          }).toList(),
-          const SizedBox(height: 100),
-        ],
-      ),
+                ],
+              )
+              : ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8.0),
+                    child: Text("Spending in ${DateTime.now().year}"),
+                  ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: graphWidget,
+                  ),
+                  const SizedBox(height: 20),
+                  ..._flattenedItems(grouped).map((item) {
+                    if (item is MonthHeaderItem) {
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: Text(
+                          item.month,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    } else if (item is ExpenseCardItem) {
+                      return _expenseCard(
+                        item.expense,
+                        fromExpenses: isExpensesTab,
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
+                  const SizedBox(height: 100),
+                ],
+              ),
     );
   }
 

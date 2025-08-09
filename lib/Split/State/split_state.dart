@@ -17,6 +17,14 @@ class SplitState extends ChangeNotifier {
   Map<String, List<SplitBill>> get mySplitBills => _mySplitBills;
   Map<String, List<SplitBill>> get myDebts => _myDebts;
 
+  void removeSplitBillById(int id) {
+    _mySplitBills.updateAll((monthYear, bills) {
+      bills.removeWhere((bill) => bill.id == id);
+      return bills;
+    });
+    notifyListeners();
+  }
+
   void clear() {
     _mySplitBills = {};
     _myDebts = {};
@@ -24,10 +32,7 @@ class SplitState extends ChangeNotifier {
   }
 
   Future<void> loadAllData(Account currentUser) async {
-    await Future.wait([
-      loadExpenses(currentUser),
-      loadDebts(currentUser),
-    ]);
+    await Future.wait([loadExpenses(currentUser), loadDebts(currentUser)]);
   }
 
   Future<void> loadExpenses(Account currentUser) async {

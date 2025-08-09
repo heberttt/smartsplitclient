@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smartsplitclient/Authentication/State/auth_state.dart';
 import 'package:smartsplitclient/Expense/Service/split_service.dart';
 import 'package:smartsplitclient/Group/Model/group.dart';
 import 'package:smartsplitclient/Split/Model/friend.dart';
@@ -6,6 +8,7 @@ import 'package:smartsplitclient/Split/Model/friend_split.dart';
 import 'package:smartsplitclient/Split/Model/receipt.dart';
 import 'package:intl/intl.dart';
 import 'package:smartsplitclient/Split/Model/receipt_item.dart';
+import 'package:smartsplitclient/Split/State/split_state.dart';
 
 class SplitResultPage extends StatefulWidget {
   const SplitResultPage(this.receipt, {this.group, super.key});
@@ -364,10 +367,13 @@ class _SplitResultPageState extends State<SplitResultPage> {
                         },
                       );
 
-
                       bool success = await _splitService.saveSplit(
                         widget.receipt,
-                        group: widget.group
+                        group: widget.group,
+                      );
+
+                      context.read<SplitState>().loadAllData(
+                        context.read<AuthState>().currentUser!,
                       );
 
                       if (context.mounted) Navigator.of(context).pop();

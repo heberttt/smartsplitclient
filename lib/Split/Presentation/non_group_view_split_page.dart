@@ -459,8 +459,11 @@ class _NonGroupViewSplitPageState extends State<NonGroupViewSplitPage> {
                   final success = await _splitService.deleteSplitBill(
                     widget.splitBill,
                   );
+                  
                   if (success) {
-                    if (mounted) Navigator.of(context).pop();
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                    }
                   } else {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
