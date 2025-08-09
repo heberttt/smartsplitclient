@@ -315,20 +315,23 @@ class _ReceiptItemBarState extends State<ReceiptItemBar> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  GestureDetector(
-                    onTap: () async {
-                      String? result = await _popUpItemName(context);
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () async {
+                        String? result = await _popUpItemName(context);
 
-                      if (result != null) {
-                        setState(() {
-                          widget.item.itemName = result;
-                        });
-                      }
-                    },
-                    child: Text(
-                      widget.item.itemName.length > 40
-                          ? '${widget.item.itemName.substring(0, 40)}...'
-                          : widget.item.itemName,
+                        if (result != null) {
+                          setState(() {
+                            widget.item.itemName = result;
+                          });
+                        }
+                      },
+                      child: Text(
+                        widget.item.itemName,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
+                      ),
                     ),
                   ),
                   Checkbox(

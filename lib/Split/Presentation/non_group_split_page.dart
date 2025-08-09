@@ -335,14 +335,18 @@ class _SplitPageState extends State<SplitPage> {
                         height: 70,
                         color: Colors.white,
                         alignment: Alignment.center,
-                        child: TextField(
-                          controller: _titleController,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.black),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            isCollapsed: true,
-                            contentPadding: EdgeInsets.zero,
+                        child: SizedBox(
+                          width: MediaQuery.sizeOf(context).width * 80 / 100,
+                          child: TextField(
+                            controller: _titleController,
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 16, color: Colors.black),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              isCollapsed: true,
+                              contentPadding: EdgeInsets.zero,
+                            ),
                           ),
                         ),
                       ),
@@ -427,7 +431,7 @@ class _SplitPageState extends State<SplitPage> {
                                       if (percent != null) {
                                         setState(() {
                                           receipt.additionalChargesPercent =
-                                            percent;
+                                              percent;
                                         });
                                       }
                                     },
@@ -512,7 +516,11 @@ class _SplitPageState extends State<SplitPage> {
 
                         Navigator.of(context).push(
                           PageRouteBuilder(
-                            pageBuilder: (_, _, _) => SplitResultPage(group: widget.group, receipt),
+                            pageBuilder:
+                                (_, _, _) => SplitResultPage(
+                                  group: widget.group,
+                                  receipt,
+                                ),
                             transitionDuration: Duration.zero,
                             reverseTransitionDuration: Duration.zero,
                           ),
